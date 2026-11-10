@@ -1,0 +1,66 @@
+name: ecodata-platform
+
+x-backend: &backend
+  image: ecodata-platform:local
+  build:
+    context: .
+    target: api
+  environment:
+    ECODATA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ecodata}:${POSTGRES_PASSWORD:-ecodata}@db:5432/${POSTGRES_DB:-ecodata}
+    ECODATA_DATABASE_CONNECT_TIMEOUT: 3
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ecodata}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecodata}
+      POSTGRES_DB: ${POSTGRES_DB:-ecodata}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  migrate:
+    <<: *backend
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *backend
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=8)"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  ui:
+    profiles: ["ui"]
+    build:
+      context: .
+      target: ui
+    environment:
+      ECODATA_API_URL: http://api:8000
+    ports:
+      - "127.0.0.1:${UI_PORT:-8501}:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
