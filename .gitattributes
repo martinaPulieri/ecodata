@@ -1,3 +1,0 @@
-# Preserve reference documents and diagrams byte-for-byte.
-*.pdf binary
-*.png binary
