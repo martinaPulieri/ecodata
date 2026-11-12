@@ -1,1 +1,0 @@
-"""Ecological data integration platform."""
