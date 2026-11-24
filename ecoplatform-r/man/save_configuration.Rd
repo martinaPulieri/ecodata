@@ -12,7 +12,8 @@ save_configuration(
   schema = list(profile_id = "generic_tabular", confirmed = FALSE, evidence = ""),
   expected_revision = NULL,
   actor_id,
-  parser_detection = list()
+  parser_detection = list(),
+  expected_workspace_revision = NULL
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ per-resource parser overrides are not supported.}
 \item{parser_detection}{Optional named per-resource detection evidence. Each
 entry must match that resource's immutable byte hash. Manual edits may
 preserve this evidence without claiming their overrides were detected.}
+
+\item{expected_workspace_revision}{Optional displayed lifecycle revision.
+NULL captures current membership at entry; writes recheck it atomically.}
 }
 \value{
 Snapshot including config_id, revision, hash and complete payload.

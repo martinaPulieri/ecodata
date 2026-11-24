@@ -6,6 +6,13 @@ New CSV/TSV uploads automatically detect supported encoding and separator when e
 
 ## Launch the interface
 
+Uploaded source versions can now be removed reversibly from active work and
+restored from **Rimossi**. Files and history remain stored; removal does not free
+disk space. See [removal and manual checks](docs/user-guide/workspace-removal.md)
+and [schema v2 contracts](docs/architecture/workspace-lifecycle.md). Stop older
+app processes before opening an existing runtime with this version: it upgrades
+schema v1 automatically after making a verified backup.
+
 From this directory, run `Rscript --vanilla tools/launch-shiny.R`, then open http://127.0.0.1:8791. ECODATA_PORT can select a different free local port; ECODATA_RUNTIME_ROOT selects persistent local, non-synchronised storage. Each browser session owns its SQLite connection. The exported `run_app()` and launcher consistently configure the upload transport limit; scientific validation remains a later increment.
 
 ## Setup
@@ -49,5 +56,9 @@ The low-level register_input()/save_configuration() example above keeps explicit
 Run `Rscript --vanilla tools/manual-step1.R` for a complete synthetic example with two revisions, lifecycle events, restart and backup. The script prints the created runtime path and saves evidence there. All source code functions have generated R help pages, for example `?register_input`, `?save_configuration` and `?submit_operation`.
 
 ## Review status
+
+The user approved publication of reversible workspace removal, including its
+code, tests and documentation. See the [removal verification summary](docs/verification/2026-11-24-workspace-removal.md)
+for executed checks, scope and operational limits.
 
 The user approved publication of input registration, the Shiny interface and automatic format detection, including tests and documentation. See the [verification summary](docs/verification/2026-11-24-foundation-shiny-detection.md) for scope and executed checks. Generated evidence and runtime data remain local; future implementation increments still require their own approval.

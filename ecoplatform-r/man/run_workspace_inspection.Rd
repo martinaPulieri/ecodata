@@ -4,7 +4,13 @@
 \alias{run_workspace_inspection}
 \title{Execute and record a bounded workspace inspection}
 \usage{
-run_workspace_inspection(repo, version_id, config_id, actor_id)
+run_workspace_inspection(
+  repo,
+  version_id,
+  config_id,
+  actor_id,
+  expected_workspace_revision = NULL
+)
 }
 \arguments{
 \item{repo}{Open repository handle.}
@@ -14,6 +20,8 @@ run_workspace_inspection(repo, version_id, config_id, actor_id)
 \item{config_id}{Exact configuration revision.}
 
 \item{actor_id}{Explicit operator label.}
+
+\item{expected_workspace_revision}{Optional displayed lifecycle revision.}
 }
 \value{
 List containing inspection and its operation_id.

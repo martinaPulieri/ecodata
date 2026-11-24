@@ -29,6 +29,10 @@ Per DwC-A i parser delle tabelle sono dichiarati nel meta.xml: il modulo non pro
 
 ## Perimetro e codice
 
+Per rimozione reversibile, vista Rimossi, ripristino e relativi controlli manuali,
+vedere [workspace-removal.md](workspace-removal.md). La rimozione conserva tutti
+i byte e lo storico e riguarda la versione selezionata, con tutti i suoi file.
+
 - app_ui.R: struttura delle tre viste; inst/www/workspace.css: stile locale e responsive.
 - mod_workspace.R: reattivita', eventi espliciti e guardie del contesto.
 - service_workspace.R: passaggio upload -> registrazione/configurazione e anteprima -> storico.

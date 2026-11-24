@@ -23,7 +23,8 @@ register_uploaded_inputs <- function(repo, upload, title, actor_id) {
     resources <- get_input(repo, registered$version_id)$resources
     parsers <- stats::setNames(lapply(resources$original_name, default_parser), resources$resource_id)
     detected <- detect_registered_configuration(repo, registered$version_id, parsers)
-    save_configuration(repo, registered$version_id, parsers = detected$parsers, parser_detection = detected$evidence, actor_id = actor_id)
+    save_configuration(repo, registered$version_id, parsers = detected$parsers, parser_detection = detected$evidence, actor_id = actor_id,
+      expected_workspace_revision = 0L)
   }, error = function(e) {
     stop("Input retained as ", registered$version_id, "; initial configuration was not saved: ", conditionMessage(e))
   })
@@ -39,10 +40,12 @@ register_uploaded_inputs <- function(repo, upload, title, actor_id) {
 #' @param version_id Exact registered source version.
 #' @param config_id Exact configuration revision.
 #' @param actor_id Explicit operator label.
+#' @param expected_workspace_revision Optional displayed lifecycle revision.
 #' @return List containing inspection and its operation_id.
 #' @export
-run_workspace_inspection <- function(repo, version_id, config_id, actor_id) {
-  request <- submit_operation(repo, version_id, config_id, "inspect", new_id(repo, "request"), actor_id)
+run_workspace_inspection <- function(repo, version_id, config_id, actor_id, expected_workspace_revision = NULL) {
+  request <- submit_operation(repo, version_id, config_id, "inspect", new_id(repo, "request"), actor_id,
+    expected_workspace_revision = expected_workspace_revision)
   id <- request$operation_id
   record_operation_event(repo, id, "running", actor_id)
   result <- tryCatch(inspect_input(version_id, config_id, repo), error = function(e) {
@@ -55,8 +58,8 @@ run_workspace_inspection <- function(repo, version_id, config_id, actor_id) {
   list(inspection = result, operation_id = id)
 }
 
-workspace_version_choices <- function(repo) {
-  versions <- list_inputs(repo)
+workspace_version_choices <- function(repo, state = "active") {
+  versions <- list_workspace_inputs(repo, state)
   if (!nrow(versions)) return(character())
   titles <- vapply(versions$version_id, function(id) {
     x <- get_input(repo, id)

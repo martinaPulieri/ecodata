@@ -4,7 +4,13 @@
 \alias{redetect_configuration}
 \title{Detect the selected resource into a new configuration revision}
 \usage{
-redetect_configuration(repo, config_id, resource_id, actor_id)
+redetect_configuration(
+  repo,
+  config_id,
+  resource_id,
+  actor_id,
+  expected_workspace_revision = NULL
+)
 }
 \arguments{
 \item{repo}{Open repository handle.}
@@ -14,6 +20,8 @@ redetect_configuration(repo, config_id, resource_id, actor_id)
 \item{resource_id}{Resource within that configuration's input version.}
 
 \item{actor_id}{Explicit requesting operator label.}
+
+\item{expected_workspace_revision}{Optional displayed lifecycle revision.}
 }
 \value{
 New configuration snapshot; existing snapshots remain unchanged.

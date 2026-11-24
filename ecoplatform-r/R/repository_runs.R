@@ -10,9 +10,13 @@
 #'   next step; this function does not claim a validator exists.
 #' @param request_id Caller-generated idempotency key, unique in this repository.
 #' @param actor_id Explicit submitting user or worker identity.
+#' @param expected_workspace_revision Optional displayed lifecycle revision;
+#'   checked for new submissions under the write reservation. An existing
+#'   idempotency key remains a history lookup even when the input is removed.
 #' @return List with operation_id and current status.
 #' @export
-submit_operation <- function(repo, version_id, config_id, operation_type, request_id, actor_id) {
+submit_operation <- function(repo, version_id, config_id, operation_type, request_id, actor_id,
+  expected_workspace_revision = NULL) {
   for (name in c("operation_type", "request_id", "actor_id")) scalar_text(get(name), name)
   if (!operation_type %in% c("inspect", "validation")) stop("Unsupported operation_type")
   config <- get_configuration(repo, config_id)
@@ -25,6 +29,7 @@ submit_operation <- function(repo, version_id, config_id, operation_type, reques
       if (old$request_hash != fingerprint) stop("request_id was already used for a different request")
       return(list(operation_id = old$operation_id, status = utils::tail(get_operation(repo, old$operation_id)$events$status, 1)))
     }
+    assert_workspace_active(repo, version_id, expected_workspace_revision)
     verified <- verify_input(repo, version_id)
     if (!verified$ok) stop("Input integrity verification failed")
     if (operation_type == "validation" && any(verified$resources$acquisition_status == "incomplete")) stop("Cannot submit incomplete acquisition as a validation input")

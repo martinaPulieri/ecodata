@@ -1,4 +1,8 @@
-# Input, configuration and execution contracts (schema v1)
+# Input, configuration and execution contracts (v1 foundation)
+
+The current schema is v2. The original entities below retain these contracts;
+see [workspace lifecycle](workspace-lifecycle.md) for the additive migration,
+active/removed projection and transactional guards.
 
 ## Boundaries
 

@@ -180,15 +180,17 @@ detect_registered_configuration <- function(repo, version_id, parsers, evidence 
 #' @param config_id Exact latest configuration snapshot to extend.
 #' @param resource_id Resource within that configuration's input version.
 #' @param actor_id Explicit requesting operator label.
+#' @param expected_workspace_revision Optional displayed lifecycle revision.
 #' @return New configuration snapshot; existing snapshots remain unchanged.
 #' @export
-redetect_configuration <- function(repo, config_id, resource_id, actor_id) {
+redetect_configuration <- function(repo, config_id, resource_id, actor_id, expected_workspace_revision = NULL) {
   current <- get_configuration(repo, config_id)
+  membership <- assert_workspace_active(repo, current$version_id, expected_workspace_revision)
   rows <- list_configurations(repo, current$version_id)
   if (utils::tail(rows$config_id, 1) != config_id) stop("stale configuration; reload before detection")
   evidence <- if (is.null(current$parser_detection)) list() else current$parser_detection
   detected <- detect_registered_configuration(repo, current$version_id, current$parsers, evidence, resource_id)
   save_configuration(repo, current$version_id, parsers = detected$parsers,
     metadata = current$metadata, schema = current$schema, parser_detection = detected$evidence,
-    expected_revision = current$revision, actor_id = actor_id)
+    expected_revision = current$revision, actor_id = actor_id, expected_workspace_revision = membership)
 }

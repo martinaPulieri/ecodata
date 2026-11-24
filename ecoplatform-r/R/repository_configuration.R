@@ -18,12 +18,15 @@
 #' @param parser_detection Optional named per-resource detection evidence. Each
 #'   entry must match that resource's immutable byte hash. Manual edits may
 #'   preserve this evidence without claiming their overrides were detected.
+#' @param expected_workspace_revision Optional displayed lifecycle revision.
+#'   NULL captures current membership at entry; writes recheck it atomically.
 #' @return Snapshot including config_id, revision, hash and complete payload.
 #' @export
 save_configuration <- function(repo, version_id, parsers = NULL, metadata = list(),
   schema = list(profile_id = "generic_tabular", confirmed = FALSE, evidence = ""),
-  expected_revision = NULL, actor_id, parser_detection = list()) {
+  expected_revision = NULL, actor_id, parser_detection = list(), expected_workspace_revision = NULL) {
   scalar_text(actor_id, "actor_id")
+  membership <- assert_workspace_active(repo, version_id, expected_workspace_revision)
   resources <- get_input(repo, version_id)$resources
   defaults <- stats::setNames(lapply(resources$original_name, default_parser), resources$resource_id)
   if (is.null(parsers)) parsers <- defaults
@@ -56,6 +59,7 @@ save_configuration <- function(repo, version_id, parsers = NULL, metadata = list
   text <- json_text(payload)
   id <- new_id(repo, "config")
   with_write(repo$con, function() {
+    assert_workspace_active(repo, version_id, membership)
     old <- DBI::dbGetQuery(repo$con, "SELECT config_id, revision FROM configuration_revisions WHERE version_id = ? ORDER BY revision DESC LIMIT 1", params = list(version_id))
     actual <- if (nrow(old)) old$revision else 0L
     expected <- if (is.null(expected_revision)) 0L else expected_revision

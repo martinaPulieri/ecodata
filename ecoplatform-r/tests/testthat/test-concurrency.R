@@ -1,22 +1,3 @@
-# Independent R processes expose real SQLite/file races rather than mocked locks.
-concurrent_workers <- function(fn, args, open_root = NULL) {
-  cluster <- parallel::makePSOCKcluster(2L)
-  withr::defer(parallel::stopCluster(cluster))
-  libraries <- .libPaths()
-  package_path <- getNamespaceInfo(asNamespace("ecodata"), "path")
-  parallel::clusterCall(cluster, function(libs, path) {
-    .libPaths(libs)
-    if (file.exists(file.path(path, "R", "repository_connection.R"))) pkgload::load_all(path, quiet = TRUE)
-    else library(ecodata)
-    NULL
-  }, libraries, package_path)
-  if (!is.null(open_root)) parallel::clusterCall(cluster, function(root) {
-    assign("migration_repo", open_repository(root), envir = .GlobalEnv)
-    NULL
-  }, open_root)
-  parallel::parLapply(cluster, args, fn)
-}
-
 test_that("concurrent first opens initialise exactly one valid schema", {
   root <- tempfile("concurrent-open-")
   results <- concurrent_workers(function(root) {
@@ -26,7 +7,7 @@ test_that("concurrent first opens initialise exactly one valid schema", {
       DBI::dbGetQuery(repo$con, "PRAGMA user_version")[[1]]
     }, error = conditionMessage)
   }, list(root, root))
-  expect_equal(results, list(1L, 1L))
+  expect_equal(results, list(2L, 2L))
 })
 
 test_that("concurrent migrations recheck version under the writer reservation", {
@@ -36,11 +17,11 @@ test_that("concurrent migrations recheck version under the writer reservation", 
     tryCatch({
       repo <- get("migration_repo", envir = .GlobalEnv)
       on.exit(close_repository(repo))
-      migrate_repository(repo$con, statements = "CREATE TABLE migration_once (id INTEGER)", target_version = 2L)
+      migrate_repository(repo$con, statements = "CREATE TABLE migration_once (id INTEGER)", target_version = 3L)
     }, error = conditionMessage)
   }, list(root, root), open_root = root)
-  expect_equal(results, list(2L, 2L))
-  expect_equal(DBI::dbGetQuery(repo$con, "PRAGMA user_version")[[1]], 2L)
+  expect_equal(results, list(3L, 3L))
+  expect_equal(DBI::dbGetQuery(repo$con, "PRAGMA user_version")[[1]], 3L)
   expect_true(DBI::dbExistsTable(repo$con, "migration_once"))
 })
 

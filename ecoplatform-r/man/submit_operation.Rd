@@ -10,7 +10,8 @@ submit_operation(
   config_id,
   operation_type,
   request_id,
-  actor_id
+  actor_id,
+  expected_workspace_revision = NULL
 )
 }
 \arguments{
@@ -26,6 +27,10 @@ next step; this function does not claim a validator exists.}
 \item{request_id}{Caller-generated idempotency key, unique in this repository.}
 
 \item{actor_id}{Explicit submitting user or worker identity.}
+
+\item{expected_workspace_revision}{Optional displayed lifecycle revision;
+checked for new submissions under the write reservation. An existing
+idempotency key remains a history lookup even when the input is removed.}
 }
 \value{
 List with operation_id and current status.

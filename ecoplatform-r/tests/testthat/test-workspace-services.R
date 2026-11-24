@@ -32,3 +32,18 @@ test_that("failed inspections are logged against the frozen configuration", {
   expect_equal(result$inspection$resources[[1]]$status, "unsupported")
   expect_equal(get_operation(repo, result$operation_id)$configuration$config_id, cfg$config_id)
 })
+# Detection may take time after registration makes the source visible to others.
+test_that("initial upload detection cannot save across a remove restore cycle", {
+  repo <- new_test_repo()
+  path <- write_fixture()
+  upload <- data.frame(name = "sample.csv", size = file.info(path)$size, type = "text/csv", datapath = path)
+  original <- detect_registered_configuration
+  with_mocked_bindings({
+    expect_error(register_uploaded_inputs(repo, upload, "Race", "tester"), "stale")
+    expect_equal(nrow(list_configurations(repo, list_inputs(repo)$version_id)), 0L)
+  }, detect_registered_configuration = function(repo, version_id, parsers, ...) {
+    set_workspace_state(repo, version_id, "removed", 0L, "upload-rm", "other")
+    set_workspace_state(repo, version_id, "active", 1L, "upload-restore", "other")
+    original(repo, version_id, parsers, ...)
+  })
+})

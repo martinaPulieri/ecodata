@@ -1,6 +1,6 @@
 #' Apply an atomic repository schema migration
 #'
-#' Default use initialises schema v1 or leaves an existing v1 unchanged. Future
+#' Default use initialises schema v2 or upgrades an existing v1 atomically. Future
 #' explicit upgrades back up the committed database before changing it. Schema
 #' checks, SQL changes and user_version updates share one write reservation.
 #' @param con Open SQLite connection.
@@ -9,7 +9,7 @@
 #' @param target_version Positive integer schema version.
 #' @return Current schema version, invisibly.
 #' @export
-migrate_repository <- function(con, statements = NULL, target_version = 1L) {
+migrate_repository <- function(con, statements = NULL, target_version = 2L) {
   target_version <- integer_bound(target_version, "target_version", 100000L)
   with_write(con, function() {
     # Another migrator may have committed while this writer was waiting.
@@ -17,13 +17,18 @@ migrate_repository <- function(con, statements = NULL, target_version = 1L) {
     if (current > target_version) stop("Database schema is newer than requested version")
     if (current == target_version) return(invisible(current))
     if (is.null(statements)) {
-      if (current != 0L || target_version != 1L) stop("No migration is registered for this upgrade")
-      if (length(DBI::dbListTables(con))) stop("Unrecognised unversioned database; no schema changes made")
-      file <- system.file("sql", "001_validation.sql", package = "ecodata", mustWork = TRUE)
-      statements <- strsplit(paste(readLines(file, warn = FALSE), collapse = "\n"), "\n-- statement\n", fixed = TRUE)[[1]]
-      immutable <- c("datasets", "dataset_versions", "resources", "configuration_revisions", "operations", "operation_events")
-      for (table in immutable) for (action in c("UPDATE", "DELETE")) {
-        statements <- c(statements, sprintf("CREATE TRIGGER %s_%s_immutable BEFORE %s ON %s BEGIN SELECT RAISE(ABORT, 'immutable history'); END", table, tolower(action), action, table))
+      if (target_version > 2L) stop("No migration is registered for this upgrade")
+      if (current == 0L && length(DBI::dbListTables(con))) stop("Unrecognised unversioned database; no schema changes made")
+      statements <- character()
+      for (next_version in seq.int(current + 1L, target_version)) {
+        file <- system.file("sql", c("001_validation.sql", "002_workspace_lifecycle.sql")[[next_version]], package = "ecodata", mustWork = TRUE)
+        statements <- c(statements, strsplit(paste(readLines(file, warn = FALSE), collapse = "\n"), "\n-- statement\n", fixed = TRUE)[[1]])
+        if (next_version == 1L) {
+          immutable <- c("datasets", "dataset_versions", "resources", "configuration_revisions", "operations", "operation_events")
+          for (table in immutable) for (action in c("UPDATE", "DELETE")) {
+            statements <- c(statements, sprintf("CREATE TRIGGER %s_%s_immutable BEFORE %s ON %s BEGIN SELECT RAISE(ABORT, 'immutable history'); END", table, tolower(action), action, table))
+          }
+        }
       }
     }
     if (!is.character(statements) || !length(statements) || anyNA(statements)) stop("statements must be nonempty SQL")
