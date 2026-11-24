@@ -1,0 +1,56 @@
+#' Build the local input workspace interface
+#' @param id Shiny module namespace.
+#' @return Shiny HTML user interface. All assets are served locally.
+#' @export
+workspace_ui <- function(id = "workspace") {
+  ns <- shiny::NS(id)
+  shiny::fluidPage(
+    theme = bslib::bs_theme(version = 5, primary = "#185e50", base_font = "system-ui"),
+    shiny::includeCSS(system.file("www", "workspace.css", package = "ecodata", mustWork = TRUE)),
+    shiny::tags$header(class = "app-header",
+      shiny::div(class = "brand", shiny::span(class = "brand-mark", shiny::icon("leaf")),
+        shiny::div(shiny::strong("ecodata"), shiny::span("Ecological data workspace"))),
+      shiny::span(class = "local-badge", shiny::span(class = "status-dot"), "In esecuzione locale")),
+    shiny::div(class = "page-intro",
+      shiny::div(shiny::div(class = "eyebrow", "INPUT E TRACCIABILITA"), shiny::h1("Il tuo spazio di lavoro"),
+        shiny::p("Registra i file, configura la lettura e ritrova ogni passaggio.")),
+      shiny::span(class = "stage-badge", "01 / Preparazione dati")),
+    shiny::uiOutput(ns("metrics")), shiny::uiOutput(ns("notice")),
+    shiny::div(class = "workspace-grid",
+      shiny::tags$aside(class = "workspace-sidebar",
+        shiny::div(class = "surface upload-card", shiny::h3("Aggiungi dati"),
+          shiny::p(class = "muted", "Gli originali vengono conservati senza modifiche."),
+          shiny::fileInput(ns("upload"), "File locali", multiple = TRUE,
+            buttonLabel = "Scegli file", placeholder = "CSV, TSV o ZIP"),
+          shiny::textInput(ns("title"), "Nome della raccolta", value = "Nuovi dati"),
+          shiny::textInput(ns("actor"), "Operatore", value = "revisore-locale"),
+          shiny::actionButton(ns("register"), "Registra input", icon = shiny::icon("plus"), class = "btn-primary full-width"),
+          shiny::p(class = "field-help", "Massimo 50 MiB per file, 200 MiB per caricamento.")),
+        shiny::div(class = "surface selection-card", shiny::h3("Dati registrati"),
+          shiny::selectInput(ns("version"), "Versione di origine", choices = character()),
+          shiny::selectInput(ns("resource"), "File", choices = character()),
+          shiny::actionButton(ns("refresh"), "Aggiorna elenco", icon = shiny::icon("rotate"), class = "btn-outline-secondary full-width")),
+        shiny::div(class = "sidebar-note", shiny::icon("shield-halved"),
+          shiny::span("File originali e configurazioni restano separati. Ogni salvataggio crea una revisione."))),
+      shiny::tags$main(class = "workspace-main",
+        shiny::tabsetPanel(id = ns("view"), type = "tabs",
+          shiny::tabPanel("Dati e configurazione", value = "config",
+            shiny::div(class = "surface tab-surface", shiny::uiOutput(ns("resource_summary")),
+              shiny::div(class = "section-heading", shiny::div(shiny::h2("Configurazione di lettura"),
+                shiny::p(class = "muted", "Scegli come interpretare il file, senza alterarne i byte."))),
+              shiny::selectInput(ns("config"), "Revisione salvata", choices = character()),
+              shiny::uiOutput(ns("parser_form")))),
+          shiny::tabPanel("Anteprima", value = "preview",
+            shiny::div(class = "surface tab-surface", shiny::uiOutput(ns("preview_summary")),
+              shiny::uiOutput(ns("table_selector")),
+              shiny::div(class = "table-scroll", shiny::tableOutput(ns("preview_table"))))),
+          shiny::tabPanel("Storico", value = "history",
+            shiny::div(class = "surface tab-surface", shiny::h2("Uno storico che resta"),
+              shiny::p(class = "muted", "Ogni anteprima usa una versione e una configurazione precise."),
+              shiny::div(class = "table-scroll", shiny::tableOutput(ns("history_table"))),
+              shiny::selectInput(ns("operation"), "Dettaglio operazione", choices = character()),
+              shiny::uiOutput(ns("operation_summary")),
+              shiny::div(class = "table-scroll", shiny::tableOutput(ns("events_table")))))))),
+    shiny::tags$footer(class = "app-footer", "Anteprima lessicale: nessun controllo scientifico viene eseguito in questa versione.")
+  )
+}

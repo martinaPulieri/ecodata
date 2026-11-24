@@ -8,7 +8,9 @@ Source repository: [martinaPulieri/ecodata](https://github.com/martinaPulieri/ec
 
 ## Current status
 
-The implementation plan and folder structure have been approved. This README documents the intended organisation and development rules; it does not claim that the application, modules, tests or runtime directories already exist. Create implementation files as their corresponding steps are approved. Existing workspace material is not evidence that a new milestone is complete.
+The approved first implementation now includes immutable input registration, versioned parser configurations, SQLite processing history, a local Shiny interface and automatic encoding/separator detection. Scientific validation rules, finding review, harvesting and formatted reporting remain later work. The structure below is the agreed roadmap; not every future module is implemented yet.
+
+Start with the [application README](ecoplatform-r/README.md), [Shiny manual checks](ecoplatform-r/docs/user-guide/shiny-workspace.md) and [verified release scope](ecoplatform-r/docs/verification/2026-11-24-foundation-shiny-detection.md).
 
 The approved plan is [Ecological Data Platform: Validation-First Implementation Plan](docs/superpowers/plans/2026-11-23-ecological-platform-validation-first.md). Earlier plans are not the basis for this implementation.
 
@@ -117,7 +119,7 @@ Domain validation functions must be usable without Shiny or database writes. Shi
 - `tests/fixtures/expected-results/`: expected findings, counts, statuses and provenance references.
 - `tests/acceptance/`: complete user workflows, including restart, interruption and manual inspection scenarios.
 - `tools/`: repeatable development and verification scripts. Each script documents its prerequisites and effects.
-- `evidence/`: concise verification records, relevant screenshots and check summaries. Exclude bulky transient outputs, private records, credentials and live databases from Git.
+- `evidence/`: generated verification logs, screenshots and runtime diagnostics, kept local and excluded from Git. Publish portable check summaries under `docs/verification/`; never commit private records, credentials or live databases.
 
 ### Technical and user documentation
 

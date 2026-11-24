@@ -1,0 +1,12 @@
+{
+  "catalogue_version": "foundation-1.0",
+  "policy_status": "prerequisites_only_no_scientific_rules_implemented",
+  "profiles": {
+    "generic_tabular": {"description": "General lexical table inspection", "required_fields": []},
+    "dwc_occurrence": {"description": "Confirmed Darwin Core Occurrence representation", "required_fields": [], "policy_note": "Required and recommended terms must be agreed before scientific validation."},
+    "dwc_event": {"description": "Confirmed Darwin Core Event representation", "required_fields": [], "policy_note": "Required fields and relationship policy remain to be agreed."},
+    "dwc_measurement": {"description": "Confirmed Darwin Core MeasurementOrFact or extended measurement representation", "required_fields": [], "policy_note": "Required fields and variable-specific constraints remain to be agreed."}
+  },
+  "severity": ["critical", "warning", "information"],
+  "applicability": ["applicable", "not_applicable", "prerequisites_missing"]
+}

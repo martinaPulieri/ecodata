@@ -1,0 +1,15 @@
+Package: ecodata
+Title: Traceable Ecological Data Processing Foundation
+Version: 0.1.0
+Authors@R: person("Martina", "Pulieri", email = "martina.pulieri@unisalento.it", role = c("aut", "cre"))
+Description: Registers immutable ecological input files, preserves explicit parser
+    and schema configuration revisions, and records processing history in SQLite.
+    This foundation performs no scientific validation or data correction.
+License: Apache License (== 2.0)
+Encoding: UTF-8
+Depends: R (>= 4.4.0)
+Imports: DBI, RSQLite, digest, jsonlite, xml2, stats, utils, tools,
+    shiny, bslib
+Suggests: testthat (>= 3.0.0), roxygen2, pkgload, renv, zip, withr, parallel
+Config/testthat/edition: 3
+RoxygenNote: 7.3.3

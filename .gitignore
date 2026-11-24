@@ -1,0 +1,18 @@
+# Operational data and local dependencies never belong in source control.
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+.Renviron
+**/renv/library/
+**/renv/staging/
+runtime/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.Rcheck/
+*.tar.gz
+.superpowers/
+# Generated verification artefacts remain local; publish docs/verification/.
+ecoplatform-r/evidence/
