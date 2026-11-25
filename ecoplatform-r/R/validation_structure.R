@@ -4,8 +4,9 @@ find_prepared_table <- function(input,table_id) {
   if(length(found)==1L)found[[1]] else NULL
 }
 
-prerequisite_record <- function(rule_id,family,status,reason,table=NULL,mapping=NULL) {
+prerequisite_record <- function(rule_id,family,status,reason,table=NULL,mapping=NULL,resource_id=NULL) {
   list(rule_id=rule_id,family=family,status=status,reason=reason,
+    resource_id=if(!is.null(table))table$resource_id else if(!is.null(mapping$table))mapping$table$resource_id else if(!is.null(mapping$core$table))mapping$core$table$resource_id else resource_id,
     table_id=if(is.null(table))NULL else table$table_id,
     population_count=if(is.null(table))NULL else table$population_count,
     eligible_rows=if(status=="ready"&&!is.null(table$population_count))table$population_count else 0L,
@@ -51,7 +52,7 @@ linkage_prerequisites <- function(input) {
     }
     if(length(core)!=1L||!supported_occurrence(core[[1]]$declaration$row_type)||!length(extensions)) {
       output[[length(output)+1L]]<-prerequisite_record("LNK-01","linkage","not_evaluated",
-        "A single supported occurrence core and measurement extension declaration are required",if(length(extensions))extensions[[1]] else NULL)
+        "A single supported occurrence core and measurement extension declaration are required",if(length(extensions))extensions[[1]] else NULL,resource_id=resource$resource_id)
       next
     }
     core<-core[[1]]

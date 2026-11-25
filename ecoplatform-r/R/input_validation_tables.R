@@ -79,7 +79,7 @@ read_validation_tables <- function(repo,version_id,config_id,max_table_bytes=50*
       status=if(inherits(e,"ecodata_read_limited"))"limited" else if(inherits(e,"ecodata_read_cancelled"))"cancelled" else "unreadable",
       reason=conditionMessage(e))),reason=conditionMessage(e)))
     tables<-c(tables,unname(result$tables))
-    resource_outcomes[[length(resource_outcomes)+1L]]<-list(resource_id=rid,sha256=resource$sha256,original_name=resource$original_name,integrity_ok=isTRUE(resource$ok),reason=result$reason,ignored_members=result$ignored_members)
+    resource_outcomes[[length(resource_outcomes)+1L]]<-list(resource_id=rid,sha256=resource$sha256,original_name=resource$original_name,size_bytes=resource$size_bytes,integrity_ok=isTRUE(resource$ok),reason=result$reason,ignored_members=result$ignored_members)
   }
   # A concurrent external modification invalidates only that resource's views.
   after<-verify_input(repo,version_id)$resources

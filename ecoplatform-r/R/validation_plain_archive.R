@@ -5,7 +5,7 @@ plain_archive_linkage_prerequisites <- function(input,resource,tables) {
   if(!length(mappings))return(list(prerequisite_record("LNK-01","linkage",
     if(length(tables)<2L)"not_applicable" else "not_evaluated",
     if(length(tables)<2L)"No multi-table archive relationship is available" else
-      "Plain ZIP relationship and exact table/key assignments require explicit approval")))
+      "Plain ZIP relationship and exact table/key assignments require explicit approval",resource_id=resource$resource_id)))
   lapply(mappings,function(mapping) {
     core<-find_prepared_table(input,mapping$core$table$table_id)
     extension<-find_prepared_table(input,mapping$extension$table$table_id)

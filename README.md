@@ -220,3 +220,17 @@ is included in these increments.
 See the [OBIS/ZIP verification](ecoplatform-r/docs/verification/2026-11-25-plain-zip.md),
 [clarification guide](ecoplatform-r/docs/user-guide/clarifications.md) and
 [updated implementation plan](docs/superpowers/plans/2026-11-23-ecological-platform-validation-first.md).
+
+## Approved Step 2C linkage engine
+
+The user approved publication of the exact linkage engine, tests, updated plan
+and documentation on 25 November 2026. It returns per-measurement outcomes,
+findings, coverage and multiplicity without modifying inputs or saving results.
+The supplied OBIS snapshot has 5,831 unique IDs across 29 datasets and 2,762 unique
+targets under both id and dataset_id+id, with no namespace conflict. This
+diagnostic does not automatically adopt a real mapping.
+
+Verification: 928 passed assertions; installed-package Status: OK.
+See the [Step 2C verification](ecoplatform-r/docs/verification/2026-11-25-linkage-engine.md)
+and [manual guide](ecoplatform-r/docs/user-guide/linkage-engine.md).
+Date recognition and the results persistence/interface remain subsequent work.

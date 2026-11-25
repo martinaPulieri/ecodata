@@ -7,7 +7,13 @@
 \usage{
 summarise_date_results(context, mapping_id, results, population_count)
 
-summarise_linkage_results(context, mapping_id, results, population_count)
+summarise_linkage_results(
+  context,
+  mapping_id,
+  results,
+  population_count,
+  cancelled = NULL
+)
 }
 \arguments{
 \item{context}{Frozen validation context.}
@@ -17,6 +23,9 @@ summarise_linkage_results(context, mapping_id, results, population_count)
 \item{results}{Typed records for this context/mapping, including not_evaluated rows.}
 
 \item{population_count}{Exact number of source rows; zero is supported.}
+
+\item{cancelled}{Optional cooperative function for linkage summaries; NULL
+leaves existing summary behaviour unchanged.}
 }
 \value{
 JSON-compatible mutually exclusive status counts. Missing or duplicate

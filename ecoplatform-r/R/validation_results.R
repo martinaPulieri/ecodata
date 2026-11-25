@@ -237,19 +237,22 @@ validate_row_result <- function(context, mapping_id, record, kind) {
   if (!contract_equal(record, rebuilt)) stop("Result identity or payload disagrees with its frozen context")
   invisible(record)
 }
-summarise_row_contracts <- function(context, mapping_id, results, population_count, kind, field, states) {
+summarise_row_contracts <- function(context, mapping_id, results, population_count, kind, field, states, cancelled=NULL) {
   validate_frozen_context(context)
   mapped_contract(context, mapping_id, kind)
   contract_count(population_count, "population")
   if (!is.list(results) || length(results) != population_count) stop("Result count must equal the declared population; include explicit not_evaluated rows")
+  poll_linkage_cancellation(cancelled)
   rows <- numeric(length(results)); labels <- character(length(results))
   for (i in seq_along(results)) {
+    if((i-1L)%%128L==0L)poll_linkage_cancellation(cancelled)
     record <- results[[i]]
     validate_row_result(context, mapping_id, record, kind)
     contract_count(record$row_number, "row number")
     if (record$row_number < 1 || record$row_number > population_count) stop("Result row is outside the population")
     rows[[i]] <- record$row_number; labels[[i]] <- record[[field]]
   }
+  poll_linkage_cancellation(cancelled)
   if (anyDuplicated(rows)) stop("Each source row must appear exactly once per mapping")
   if (any(!labels %in% states)) stop("Unknown row outcome")
   counts <- stats::setNames(lapply(states, function(x) sum(labels == x)), states)
@@ -262,6 +265,8 @@ summarise_row_contracts <- function(context, mapping_id, results, population_cou
 #' @param mapping_id Exact date or linkage mapping identifier.
 #' @param results Typed records for this context/mapping, including not_evaluated rows.
 #' @param population_count Exact number of source rows; zero is supported.
+#' @param cancelled Optional cooperative function for linkage summaries; NULL
+#'   leaves existing summary behaviour unchanged.
 #' @return JSON-compatible mutually exclusive status counts. Missing or duplicate
 #'   rows and mixed source contexts are rejected instead of silently counted.
 #' @export
@@ -272,7 +277,7 @@ summarise_date_results <- function(context, mapping_id, results, population_coun
 
 #' @rdname summarise_date_results
 #' @export
-summarise_linkage_results <- function(context, mapping_id, results, population_count) {
+summarise_linkage_results <- function(context, mapping_id, results, population_count, cancelled=NULL) {
   summarise_row_contracts(context, mapping_id, results, population_count, "linkage", "outcome",
-    unlist(context$validation_spec$rules$snapshot$linkage_outcomes))
+    unlist(context$validation_spec$rules$snapshot$linkage_outcomes),cancelled)
 }

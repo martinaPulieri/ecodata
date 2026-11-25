@@ -5,7 +5,8 @@ Authors@R: person("Martina", "Pulieri", email = "martina.pulieri@unisalento.it",
 Description: Registers immutable ecological input files, preserves explicit parser
     and schema configuration revisions, and records processing history in SQLite.
     Defines versioned validation rules, mapping declarations and typed result
-    contracts without executing scientific checks or correcting source data.
+    contracts. Executes exact identifier linkage checks and compares candidate
+    key scopes while preserving source values.
 License: Apache License (== 2.0)
 Encoding: UTF-8
 Depends: R (>= 4.4.0)

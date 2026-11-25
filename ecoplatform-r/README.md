@@ -112,3 +112,22 @@ See [operator guide](docs/user-guide/plain-zip.md),
 Publication approval (25 November 2026): the user approved committing and pushing
 Step 2B, clarification workflow and ZIP support without meta.xml to martinaPulieri/ecodata.
 Final combined verification: 772 assertions, zero failures/errors/warnings/skips; installed-package Status: OK.
+
+## Step 2C: exact linkage
+
+The read-only run_linkage_validation() service now executes the declared/
+approved archive relationship checks with typed per-measurement outcomes,
+findings, coverage and multiplicity. compare_linkage_key_scope() provides a
+separate provisional ID/namespace diagnostic without adopting a mapping.
+The supplied OBIS snapshot does not require dataset_id + id to obtain unique
+targets; its real settings and semantic mapping remain subject to approval.
+
+See [verification](docs/verification/2026-11-25-linkage-engine.md),
+[manual guide](docs/user-guide/linkage-engine.md) and
+[architecture](docs/architecture/linkage-engine.md).
+The user approved publication of this implementation on 25 November 2026.
+
+
+Publication approval (25 November 2026): the user approved Step 2C code, tests,
+updated plan and documentation for commit/push to martinaPulieri/ecodata.
+Verified suite: 928 assertions with zero failures/errors/warnings/skips; installed-package Status: OK.

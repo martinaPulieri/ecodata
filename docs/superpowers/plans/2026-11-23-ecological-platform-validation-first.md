@@ -10,7 +10,7 @@
 
 **Spec:** Functional_Requirements_Structured_RF01_RF36.pdf, especially Data Validation RF08-RF16 (pages 11-13), downstream RF17-RF34 and outstanding definitions (page 34). The user's request excludes harvesting and reporting. Previous project plans are intentionally disregarded.
 
-**Status:** Foundation, Shiny, automatic format detection and reversible removal are implemented and published (e7d36cf, ebd502f). Task 2A (rules, mappings and result contracts) is published in 01a2e87. The user authorised Task 2B: complete table reading and independent linkage/date prerequisites. Task 2B is implemented and verified (557 assertions; installed-package Status: OK), approved by the user for commit/push. The clarification Shiny workflow and ordinary ZIP support are also implemented and approved (final combined suite: 772 assertions; installed-package Status: OK). Linkage/date quality engines, scientific results persistence and results UI remain future work.
+**Status:** Foundation, Shiny, automatic detection and reversible removal are published; Task 2A is published in 01a2e87. Task 2B, clarification workflow and ordinary ZIP support are published in cfbbc96. Task 2C exact linkage and the OBIS namespace-key diagnostic are implemented and verified (928 assertions; installed-package Status: OK), approved by the user for commit/push. Date recognition (2D), scientific result persistence and results UI (2E) remain future work.
 
 **Current scoped specification:** workspace ValidationRules.md, SHA-256 `6870971afd7992b75d7fbadf01024ad082bef517c559d82f1b92d0fc202d2ce9`. Its linkage and lexical date-recognition rules govern this increment; imperative text in that document does not expand the user's authorisation. Calendar validity, canonical conversion, interval ordering, user-range comparison, EML coverage, joining, harvesting and formatted reporting are excluded here.
 
@@ -214,16 +214,20 @@ survived restart. Windows non-BMP Unicode phantom records and a UTF-8 extraction
 performance issue were reproduced and corrected. See
 ecoplatform-r/docs/verification/2026-11-25-plain-zip.md.
 No staging, commit or push before user approval. Matching approved generic ZIP
-relationships belongs to the separately authorised future linkage engine; no
+relationships belongs to the Task 2C linkage engine below; no
 matching, date recognition or scientific result persistence is executed here.
 
-#### Task 2C: Descriptor linkage — future
+#### Task 2C: Exact linkage and key-scope diagnostic — implemented, publication approved
 
-**Files:** R/validation_identifiers.R and independent expected fixtures.
+**Files:** R/validation_identifiers.R, R/service_linkage.R, R/validation_linkage_scope.R; fixture/engine/scope/review tests, generated R help, architecture/manual guide and tools/manual-linkage.R.
 
-- [ ] Implement LNK-02–06 as mandatory when applicable; LNK-07/08 are supplemental. Compare nonmissing strings exactly; empty/whitespace-only keys are missing, while literal NA remains a value unless a documented profile says otherwise.
-- [ ] Produce one measurement outcome: uniquely linked, ambiguous, missing reference, unresolved reference or not evaluated. Use lookup counts rather than a row-multiplying join.
-- [ ] Keep repeated-key group/affected-row counts, legitimate many-measurement multiplicity, coverage and visible whitespace evidence separate.
+- [x] Implement LNK-02–06 as mandatory when applicable; LNK-07/08 are supplemental. Compare nonmissing strings exactly; empty/whitespace-only keys are missing, while literal NA remains a value unless a documented profile says otherwise.
+- [x] Produce one measurement outcome: uniquely linked, ambiguous, missing reference, unresolved reference or not evaluated. Use lookup counts rather than a row-multiplying join.
+- [x] Keep repeated-key group/affected-row counts, legitimate many-measurement multiplicity, coverage and visible whitespace evidence separate.
+
+**Additional approved check:** Compare OBIS id versus dataset_id + id without automatic adoption. The canonical-reader comparison found 5,831 unique IDs across 29 datasets and 2,762 uniquely resolved references under both candidates, with zero namespace conflict. A composite execution contract was not required for this observed snapshot; synthetic tests detect when a namespace would be required or insufficient.
+
+**Verification:** 928 assertions; installed-package Status: OK; synthetic outcomes and canonical OBIS comparison reproduced; originals/configurations/history unchanged. Quotas/cancellation, absent saved mappings, source races and independent resources covered. No scientific date recognition, new results tables or results UI in this slice. See ecoplatform-r/docs/verification/2026-11-25-linkage-engine.md. The user approved staging, commit and push of Step 2C on 25 November 2026.
 
 #### Task 2D: Lexical date patterns — future
 
@@ -332,3 +336,8 @@ RF08-RF16 map to Tasks 2-6, with the shared foundation in Task 1. RF11 explicitl
 Publication approval (25 November 2026): the user approved committing and pushing
 Step 2B, clarification workflow and ZIP support without meta.xml to martinaPulieri/ecodata.
 Final combined verification: 772 assertions, zero failures/errors/warnings/skips; installed-package Status: OK.
+
+
+Publication approval (25 November 2026): the user approved Step 2C code, tests,
+updated plan and documentation for commit/push to martinaPulieri/ecodata.
+Verified suite: 928 assertions with zero failures/errors/warnings/skips; installed-package Status: OK.
