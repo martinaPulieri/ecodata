@@ -13,7 +13,8 @@ save_configuration(
   expected_revision = NULL,
   actor_id,
   parser_detection = list(),
-  expected_workspace_revision = NULL
+  expected_workspace_revision = NULL,
+  validation_spec = NULL
 )
 }
 \arguments{
@@ -40,6 +41,11 @@ preserve this evidence without claiming their overrides were detected.}
 
 \item{expected_workspace_revision}{Optional displayed lifecycle revision.
 NULL captures current membership at entry; writes recheck it atomically.}
+
+\item{validation_spec}{Optional new_validation_spec() snapshot. NULL preserves
+the latest revision's specification (or its absence). Supply an explicit
+empty specification to clear mappings. Declared table schemas are checked
+structurally here; actual source/header prerequisites belong to validation.}
 }
 \value{
 Snapshot including config_id, revision, hash and complete payload.

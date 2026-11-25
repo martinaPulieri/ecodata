@@ -4,6 +4,13 @@ This R package implements local input registration, immutable configuration revi
 
 New CSV/TSV uploads automatically detect supported encoding and separator when evidence is unambiguous. Detected settings and evidence are saved in revision 1. Manual controls remain available; **Rileva formato** redetects an already registered file into a new revision. Ambiguous legacy encodings and competing separator candidates are explicitly flagged for review. See [automatic detection](docs/user-guide/parser-detection.md).
 
+The next approved slice (Task 2A) supplies versioned validation definitions,
+source-scoped mapping declarations and typed result contracts, stored in immutable
+configuration snapshots. It executes no validation rules and adds no validation UI.
+See [contract architecture](docs/architecture/validation-contracts.md) and
+[manual contract checks](docs/user-guide/validation-contracts.md). This increment
+has been reviewed and explicitly approved by the user for commit and push.
+
 ## Launch the interface
 
 Uploaded source versions can now be removed reversibly from active work and

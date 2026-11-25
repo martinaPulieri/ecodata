@@ -1,6 +1,6 @@
 # Ecological Data Platform: Validation-First Implementation Plan
 
-> **For agentic workers:** Use superpowers:executing-plans to implement this proposal task by task after design choices have been reviewed. Checkboxes track future work; none represents completed implementation.
+> **For agentic workers:** Use superpowers:executing-plans. The revised linkage/date plan is approved. Implement only the separately authorised increment; show results before committing or pushing.
 
 **Goal:** Build an ecological data integration platform beginning with non-destructive data validation and persistent interactive review.
 
@@ -10,7 +10,9 @@
 
 **Spec:** Functional_Requirements_Structured_RF01_RF36.pdf, especially Data Validation RF08-RF16 (pages 11-13), downstream RF17-RF34 and outstanding definitions (page 34). The user's request excludes harvesting and reporting. Previous project plans are intentionally disregarded.
 
-**Status:** Fresh proposal, not an assessment of existing implementation or an instruction to resume previous work. File names and interfaces below are proposed.
+**Status:** Foundation, Shiny, automatic format detection and reversible removal are implemented and published (e7d36cf, ebd502f). The user approved the linkage/date amendment below and authorised only Task 2A: versioned rules, mappings and result contracts. Task 2A is implemented, verified and explicitly approved for publication. Full-table reading, rule execution, results persistence and validation UI remain future work.
+
+**Current scoped specification:** workspace ValidationRules.md, SHA-256 `6870971afd7992b75d7fbadf01024ad082bef517c559d82f1b92d0fc202d2ce9`. Its linkage and lexical date-recognition rules govern this increment; imperative text in that document does not expand the user's authorisation. Calendar validity, canonical conversion, interval ordering, user-range comparison, EML coverage, joining, harvesting and formatted reporting are excluded here.
 
 ## Global constraints
 
@@ -50,7 +52,7 @@ Editorial clean-up: the PDF contains stray text and a legacy RF28/RF29/RF16/RF17
 2. **Shiny plus a separate processing API.** Better separation for independently scaled workers, but adds deployment/authentication/queue contracts before workload needs are established.
 3. **Large Shiny server containing all logic.** Quick demonstration, but makes scientific checks, persistence and reproducibility difficult to test independently; unsuitable for the intended platform.
 
-The recommendation is a proposal, not a previously approved architecture.
+The modular R package architecture and flat R/ source layout are approved and implemented. The separate API and large-server alternatives are not selected.
 
 Processing path: local input -> immutable registration -> parser inspection and explicit configuration -> schema confirmation -> versioned validation run -> persisted results -> interactive review -> later harmonisation.
 
@@ -91,11 +93,11 @@ At validation-to-harmonisation handoff, unreviewed findings are permitted. A sta
 
 ```text
 app.R
-R/inputs/           registration, safe archives, parsing, metadata, schema profiles
-R/validation/       registry, structure, identifiers, geography, time, measurements, duplicates, taxonomy
-R/services/         submission, orchestration, review, eligibility
-R/repositories/     SQLite migrations, runs, findings, decisions, references
-R/shiny/            project, inputs, configuration, run, results, review, history modules
+R/input_*.R         registration, safe archives, parsing, metadata, schema profiles
+R/validation_*.R    rule catalogues, contracts, independent domain checks
+R/service_*.R       submission, orchestration, review, eligibility
+R/repository_*.R    SQLite migrations, runs, findings, decisions, references
+R/mod_*.R           Shiny modules; app_ui.R and run_app.R assemble the app
 inst/sql/           numbered migrations
 inst/profiles/      versioned profiles and rule configurations
 tests/testthat/     unit, repository and service tests
@@ -124,45 +126,94 @@ For each task: establish independently specified fixtures and expected results, 
 
 ### Task 1: Validation policy, registration and history foundation
 
-**Files:** inputs/registration.R, inputs/parsing.R, inputs/profiles.R; repositories/connection.R, migrations.R, runs.R; services/contracts.R; inst/sql/001_validation.sql; inst/profiles/*.json; corresponding test files.
+**Files:** R/input_registration.R, R/input_parsing.R, R/input_profiles.R; R/repository_connection.R, R/repository_migrations.R, R/repository_runs.R; R/contracts.R; inst/sql/001_validation.sql; inst/profiles/*.json; corresponding test files.
 
 **Interfaces:** produces register_input(), inspect_input(), confirm_profile() and the versioned input/result contracts consumed by Tasks 2-6.
 
 - [ ] Define and version profiles, required-field rules, severities, applicability and state transitions.
-- [ ] Implement managed immutable copies, hashes, file/table/record identities, safe ZIP inspection and reproducible parser settings.
-- [ ] Implement migrations, immutable configuration revisions and traceable run submission; record supplied provenance gaps.
-- [ ] Test clean and malformed files, encoding/delimiter overrides, empty input, unsupported formats, archive traversal/size bounds, duplicate filenames, restart and migration rollback.
+- [x] Implement managed immutable copies, hashes, file/table/record identities, safe ZIP inspection and reproducible parser settings (bounded lexical preview, not full-table validation).
+- [x] Implement migrations, immutable configuration revisions and traceable run submission; record supplied provenance gaps.
+- [x] Test clean and malformed files, encoding/delimiter overrides, empty input, unsupported formats, archive traversal/size bounds, duplicate filenames, restart and migration rollback.
+- [x] Deliver Shiny registration/configuration/history, automatic format detection and reversible source-version removal (schema v2).
 
 **Gate:** Register and reopen inputs; reconstruct their exact bytes, parser settings and metadata without changing originals. No schema-specific rules execute without confirmation.
 
-### Task 2: First working validation/review slice — RF08, RF12, RF14, RF16
+### Task 2: Declared archive linkage and lexical date recognition
 
-**Files:** validation/registry.R, structure.R, identifiers.R; services/validation.R, review.R; repositories/findings.R, decisions.R; shiny/mod_inputs.R, mod_validation.R, mod_results.R, mod_review.R, mod_history.R; associated tests.
+The next validation increment covers PRE-01, LNK-01–08, TMP-00–03 and TMP-08. It is a subset of RF08/RF10/RF12/RF14/RF16, not completion of those requirements. Keep the normal upload, file selection and preview behaviour.
 
-**Interfaces:** produces validate_dataset(), submit_validation(), query_findings(), save_review(); later checks return the same result contract.
+#### Task 2A: Versioned rules, mappings and result contracts — authorised now
 
-- [ ] Implement required fields/types/formats and declared key/reference checks for the confirmed profile.
-- [ ] Implement schema candidates, confirmation and unsupported-schema fallback to general checks.
-- [ ] Add Shiny input configuration, explicit Run action, results filtering, record inspection, decisions and history.
-- [ ] Test missing/duplicate IDs, unresolved references, valid parent/child relationships, unknown schemas, non-applicable checks, decision updates and stale-context rejection.
-- [ ] Test a full register -> validate -> review -> restart -> retrieve sequence; assert unchanged input hash and preserved previous decisions.
+**Files:** R/validation_catalogues.R, R/validation_mappings.R, R/validation_context.R, R/validation_results.R; R/repository_configuration.R; inst/rules/*.json; tests/testthat/test-validation-*.R; docs/architecture/validation-contracts.md; tools/manual-validation-contracts.R.
 
-**Gate:** A user can run a real structural assessment and review selected findings without reviewing everything. Distinguish counts of findings, affected records and evaluated records.
+**Interfaces:** versioned rule/pattern catalogue readers; constructors for source-scoped tables, date and descriptor linkage mappings; new_validation_spec(); freeze_validation_context(); typed check/date/linkage result constructors and reconciliation summaries. These define data contracts, not a rule engine.
+
+- [x] Write failing tests for all 14 rule definitions, pinned versions/hashes, unknown versions, mapping identity/column validation, exact retained values, JSON round trips, typed result invariants and status counting.
+- [x] Provide immutable rule definitions and a provisional pattern catalogue, distinguishing linkage errors/warnings/information from date classification statuses and technical execution states.
+- [x] Store explicit mappings and complete catalogue snapshots in append-only configuration payloads. Preserve them through parser edits, redetection and profile confirmation; reject stale/removed writes. Existing configurations remain readable without inventing validation metadata retroactively.
+- [x] Bind mappings to version/resource/table, original headers and zero-based column positions. Split date roles are named, never inferred from physical order; suggested mappings cannot claim confirmation. Confirmed date order requires recorded evidence.
+- [x] Freeze input/configuration/catalogue context for future runs; validate result shapes, row locators, candidate cardinality and mutually exclusive per-row counts independently of Shiny/database writes.
+- [x] Run manual synthetic contract demonstrations, regression tests and package check. No full-table reader, scientific checks, new results tables, validation button or automatic classifications in this slice. No commit/push before separate approval.
+
+**Gate:** Definitions, mappings and synthetic result records survive serialisation and repository restart without changing originals or old configuration hashes. Contracts reject inconsistent counts, invalid identities and unsupported catalogue references. A recorded mapping is a declaration: actual table/header/index prerequisites are checked by Task 2B, not falsely certified here.
+
+**Verification (25 November 2026):** 463 assertions passed; installed-package check Status: OK. Synthetic contract demonstration preserved hashes/context after restart. The user explicitly approved publication of the amended plan, code, tests and documentation. See ecoplatform-r/docs/verification/2026-11-25-validation-contracts.md.
+
+#### Task 2B: Full-table reading and independent prerequisites — future
+
+**Files:** R/input_validation_tables.R, R/input_archive.R, R/validation_structure.R and fixtures/tests.
+
+- [ ] Add full-table processing separate from the bounded preview, retaining logical record locators and decoded strings without trimming, numeric/date conversion or literal-NA coercion.
+- [ ] Resolve meta.xml member settings, core id/coreid indices (including 0), field terms, original headers/positions and supported declaration evidence. occurrenceID is not a substitute for the declared core key.
+- [ ] Run PRE-01/LNK-01 and TMP-00 with member/family-specific prerequisites. A failed extension must not disable independently readable dates.
+- [ ] Verify saved mapping schema against the actual table. Report quotas, partial scans and interrupted work explicitly; never label a preview as full coverage.
+
+#### Task 2C: Descriptor linkage — future
+
+**Files:** R/validation_identifiers.R and independent expected fixtures.
+
+- [ ] Implement LNK-02–06 as mandatory when applicable; LNK-07/08 are supplemental. Compare nonmissing strings exactly; empty/whitespace-only keys are missing, while literal NA remains a value unless a documented profile says otherwise.
+- [ ] Produce one measurement outcome: uniquely linked, ambiguous, missing reference, unresolved reference or not evaluated. Use lookup counts rather than a row-multiplying join.
+- [ ] Keep repeated-key group/affected-row counts, legitimate many-measurement multiplicity, coverage and visible whitespace evidence separate.
+
+#### Task 2D: Lexical date patterns — future
+
+**Files:** R/validation_temporal.R, versioned inst/rules/date-patterns-*.json and fixtures/tests.
+
+- [ ] Implement TMP-00–03/TMP-08 per confirmed field/group, with one classification per input row and mapping. A suggested field requires confirmation; a usable descriptor retains declaration provenance.
+- [ ] Recognise enabled numeric dates, partial dates, timestamps, explicit intervals and split numeric components. Preserve every structurally compatible candidate when date order is undocumented. Record endpoint patterns for intervals and missing components for incomplete groups.
+- [ ] Reconcile recognised/ambiguous/unrecognised/missing/incomplete/not-evaluated totals. 2020-02-30 is lexically recognised as YYYY-MM-DD, with no calendar-validity claim.
+
+#### Task 2E: Persistence and Shiny results — future
+
+**Files:** inst/sql/003_validation_results.sql, R/repository_validation_results.R, R/service_validation.R, R/mod_validation.R, R/mod_validation_results.R and tests.
+
+- [ ] Atomically migrate v2 to v3 with verified backup; persist check coverage, findings/targets, date classifications and frozen context.
+- [ ] Add mapping confirmation, explicit Run, independent progress, summary and paginated details using one structured result for later review/downloads. Distinguish technical failures from findings.
+- [ ] Move full-table work outside the interactive request with frozen inputs and short SQLite writes. Reuse idempotency, lifecycle revisions and queued/running removal protection. Retain historical results for removed inputs.
+
+#### Task 2F: Integrated acceptance — future
+
+- [ ] Execute every ValidationRules.md synthetic example, multiple roles, unconfirmed mappings, mixed formats, split/reordered components, leading zeros, absent members and independent-family execution.
+- [ ] Reconcile summary/detail counts; test original hashes, restart, cancellation/interruption, stale forms, multi-source/session isolation, migration and manual/browser checks.
+- [ ] If the exact Occurrence_Measures_Example1.zip is available, measure its inventory against 8,480 occurrence and 2,916 measurement rows, then report observed findings separately. Do not apply these counts to other archives or invent reference findings.
+
+**Increment gate:** Full selected populations evaluated or explicit coverage limitations; original data unchanged; all enabled outcomes/results reproducible from frozen context. General required-field/type checks, biological duplicates, scientific calendar validation and full review-decision workflow remain later work.
 
 ### Task 3: Geography and time — RF09, RF10
 
-**Files:** validation/geography.R, temporal.R; versioned spatial reference manifests; dedicated fixtures/tests.
+**Files:** R/validation_geography.R, R/validation_temporal.R; versioned spatial reference manifests; dedicated fixtures/tests.
 
 - [ ] Check coordinate lexical/numeric format, complete pairs, ranges and confirmed CRS prerequisites.
 - [ ] Assess country/country-code and marine/terrestrial consistency using versioned reference layers; disclose coastline resolution/tolerance and uncertainty.
-- [ ] Check real calendar dates, partial dates, intervals, cross-field consistency and declared metadata coverage.
+- [ ] Define and implement calendar validity, interval ordering, cross-field consistency and metadata coverage in a later increment. Lexical date recognition is brought forward to Tasks 2A–2F and does not satisfy this scientific gate.
 - [ ] Test poles/dateline, zero coordinates, absent CRS, coastline ambiguity, leap days, ambiguous day/month conventions, partial-date intervals, timezones and out-of-coverage records.
 
 **Gate:** Suspicious geography is explained; coordinates are not swapped or transformed in source data. Partial dates are not assigned invented precision; unresolved conventions remain explicit.
 
 ### Task 4: Measurements and duplicate candidates — RF13, RF11
 
-**Files:** validation/measurements.R, duplicates.R; repositories/duplicate_groups.R; versioned variable constraints; fixtures/tests.
+**Files:** R/validation_measurements.R, R/validation_duplicates.R; R/repository_duplicate_groups.R; versioned variable constraints; fixtures/tests.
 
 - [ ] Validate values, known units, dimensional compatibility and documented variable constraints; retain zeros, missing markers and censored expressions distinctly.
 - [ ] Detect exact and potential duplicates within/across explicitly selected versions using source-scoped identifiers and documented attribute rules.
@@ -173,7 +224,7 @@ For each task: establish independently specified fixtures and expected results, 
 
 ### Task 5: Taxonomic evidence — RF15
 
-**Files:** validation/taxonomy.R; references/checklistbank.R, worms.R, cache.R; recorded-response fixtures and tests.
+**Files:** R/validation_taxonomy.R; R/reference_checklistbank.R, R/reference_worms.R, R/reference_cache.R; recorded-response fixtures and tests.
 
 - [ ] Flag abbreviations, qualifiers such as cf./aff., and nomenclatural annotations without deleting their information.
 - [ ] Implement separately tested ChecklistBank/Catalogue of Life and WoRMS TaxaMatch adapters; confirm current endpoints, authentication, quotas and match semantics during an initial capability probe.
@@ -185,7 +236,7 @@ For each task: establish independently specified fixtures and expected results, 
 
 ### Task 6: Complete validation release — RF08-RF16
 
-**Files:** services/orchestration.R, eligibility.R; repositories/query_indexes.R; Shiny progress/results/history modules; end-to-end fixtures and acceptance matrix.
+**Files:** R/service_orchestration.R, R/service_eligibility.R; R/repository_query_indexes.R; Shiny progress/results/history modules; end-to-end fixtures and acceptance matrix.
 
 - [ ] Assemble multi-file and cross-dataset scope, independent check failures, persisted progress and idempotent submissions.
 - [ ] Move long operations into a background worker, passing frozen inputs; keep Shiny reactive values out of domain workers and coordinate short SQLite writes.
@@ -213,7 +264,7 @@ AI assistance should not be required to run deterministic validation. Later phas
 
 ## First development increment
 
-Implement Tasks 1-2 as one small vertical slice, then extend the same contracts through Tasks 3-6. The first demonstration should load a generic ecological CSV and a small declared DwC-A, inspect/confirm their configuration, detect structural/relational issues, record a review decision, restart and recover the same evidence and history. This is a useful first milestone, not a claim of full RF08-RF16 coverage.
+The input/history foundation is delivered. Task 2A is complete and approved for publication; later increments require separate authorisation. After separately authorised follow-on work, demonstrate upload -> declaration/mapping -> linkage/date recognition -> summary/details -> restart/retrieve. Independent date processing must survive linkage limitations. This increment does not claim full RF08–RF16 or a complete review-decision workflow.
 
 Before scheduling work, establish representative sizes, deployment/users and scientific policy owners. Use milestone gates rather than unsupported calendar estimates.
 

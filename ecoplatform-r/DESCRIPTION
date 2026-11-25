@@ -4,7 +4,8 @@ Version: 0.1.0
 Authors@R: person("Martina", "Pulieri", email = "martina.pulieri@unisalento.it", role = c("aut", "cre"))
 Description: Registers immutable ecological input files, preserves explicit parser
     and schema configuration revisions, and records processing history in SQLite.
-    This foundation performs no scientific validation or data correction.
+    Defines versioned validation rules, mapping declarations and typed result
+    contracts without executing scientific checks or correcting source data.
 License: Apache License (== 2.0)
 Encoding: UTF-8
 Depends: R (>= 4.4.0)

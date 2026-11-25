@@ -1,0 +1,25 @@
+{
+  "catalogue_version": "linkage-dates-1.0",
+  "rule_version": "1.0",
+  "implementation_status": "definitions_only",
+  "source": {"file": "ValidationRules.md", "sha256": "6870971afd7992b75d7fbadf01024ad082bef517c559d82f1b92d0fc202d2ce9"},
+  "identifier_policy": {"comparison": "exact_decoded_text", "missing": "empty_or_whitespace_only", "trim_before_comparison": false, "literal_NA_is_missing": false},
+  "linkage_outcomes": ["linked", "ambiguous", "missing_reference", "unresolved_reference", "not_evaluated"],
+  "date_statuses": ["recognised", "ambiguous", "unrecognised", "missing", "incomplete", "not_evaluated"],
+  "rules": {
+    "PRE-01": {"rf": ["RF08", "RF14"], "family": "prerequisite", "severity": null, "mandatory_when_applicable": true, "prerequisites": [], "description": "Assess readable declared members, parsing settings, required indices and supported profile separately for each dependent family."},
+    "LNK-01": {"rf": ["RF12", "RF14"], "family": "linkage", "severity": null, "mandatory_when_applicable": true, "prerequisites": ["PRE-01"], "description": "Resolve the descriptor core ID and extension reference columns; retain the exact member/column pair."},
+    "LNK-02": {"rf": ["RF12"], "family": "linkage", "severity": "error", "mandatory_when_applicable": true, "prerequisites": ["PRE-01", "LNK-01"], "description": "One finding per empty or whitespace-only core key, preserving its original text."},
+    "LNK-03": {"rf": ["RF12"], "family": "linkage", "severity": "error", "mandatory_when_applicable": true, "prerequisites": ["PRE-01", "LNK-01"], "description": "One finding per exact repeated nonmissing core-key group, retaining all member row locators."},
+    "LNK-04": {"rf": ["RF12"], "family": "linkage", "severity": "error", "mandatory_when_applicable": true, "prerequisites": ["PRE-01", "LNK-01"], "description": "One finding per empty or whitespace-only measurement reference."},
+    "LNK-05": {"rf": ["RF12"], "family": "linkage", "severity": "error", "mandatory_when_applicable": true, "prerequisites": ["PRE-01", "LNK-01"], "description": "A nonmissing reference with zero exact nonmissing core targets is unresolved."},
+    "LNK-06": {"rf": ["RF12"], "family": "linkage", "severity": "error", "mandatory_when_applicable": true, "prerequisites": ["PRE-01", "LNK-01"], "description": "A reference with multiple exact core targets is ambiguous; include all candidate row locators."},
+    "LNK-07": {"rf": ["RF12"], "family": "linkage", "severity": "information", "mandatory_when_applicable": false, "prerequisites": ["PRE-01", "LNK-01"], "description": "Summarise measurements per unique nonmissing core key; missing/repeated keys have separate coverage groups."},
+    "LNK-08": {"rf": ["RF12"], "family": "linkage", "severity": "warning", "mandatory_when_applicable": false, "prerequisites": ["PRE-01", "LNK-01"], "description": "Expose leading/trailing whitespace on nonmissing identifiers without changing exact equality."},
+    "TMP-00": {"rf": ["RF10", "RF14"], "family": "date", "severity": null, "mandatory_when_applicable": true, "prerequisites": [], "description": "Resolve readable declared or explicitly confirmed date roles and component assignments; suggestions do not authorise execution."},
+    "TMP-01": {"rf": ["RF10"], "family": "date", "severity": null, "mandatory_when_applicable": true, "prerequisites": ["TMP-00"], "description": "Classify empty or whitespace-only mapped single-field dates as missing."},
+    "TMP-02": {"rf": ["RF10"], "family": "date", "severity": null, "mandatory_when_applicable": true, "prerequisites": ["TMP-00"], "description": "Collect all compatible enabled lexical patterns; documented date order can resolve candidates. No calendar validation."},
+    "TMP-03": {"rf": ["RF10"], "family": "date", "severity": null, "mandatory_when_applicable": true, "prerequisites": ["TMP-00"], "description": "Classify named day/month/year components as missing, incomplete, recognised or unrecognised without assembling a date."},
+    "TMP-08": {"rf": ["RF10"], "family": "date", "severity": null, "mandatory_when_applicable": true, "prerequisites": ["TMP-00"], "description": "Reconcile one status per source row per mapped date field/group; candidate counts are separate from row totals."}
+  }
+}

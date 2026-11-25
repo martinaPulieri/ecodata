@@ -20,11 +20,16 @@
 #'   preserve this evidence without claiming their overrides were detected.
 #' @param expected_workspace_revision Optional displayed lifecycle revision.
 #'   NULL captures current membership at entry; writes recheck it atomically.
+#' @param validation_spec Optional new_validation_spec() snapshot. NULL preserves
+#'   the latest revision's specification (or its absence). Supply an explicit
+#'   empty specification to clear mappings. Declared table schemas are checked
+#'   structurally here; actual source/header prerequisites belong to validation.
 #' @return Snapshot including config_id, revision, hash and complete payload.
 #' @export
 save_configuration <- function(repo, version_id, parsers = NULL, metadata = list(),
   schema = list(profile_id = "generic_tabular", confirmed = FALSE, evidence = ""),
-  expected_revision = NULL, actor_id, parser_detection = list(), expected_workspace_revision = NULL) {
+  expected_revision = NULL, actor_id, parser_detection = list(), expected_workspace_revision = NULL,
+  validation_spec = NULL) {
   scalar_text(actor_id, "actor_id")
   membership <- assert_workspace_active(repo, version_id, expected_workspace_revision)
   resources <- get_input(repo, version_id)$resources
@@ -56,14 +61,20 @@ save_configuration <- function(repo, version_id, parsers = NULL, metadata = list
   payload <- list(parsers = parsers, metadata = metadata, schema = schema, parser_detection = parser_detection,
     profile_catalogue_version = profile_catalogue()$catalogue_version,
     parser_engine_version = "lexical-preview-1.0")
-  text <- json_text(payload)
+  if (!is.null(validation_spec)) validate_validation_spec(validation_spec, version_id, resources$resource_id)
   id <- new_id(repo, "config")
   with_write(repo$con, function() {
     assert_workspace_active(repo, version_id, membership)
-    old <- DBI::dbGetQuery(repo$con, "SELECT config_id, revision FROM configuration_revisions WHERE version_id = ? ORDER BY revision DESC LIMIT 1", params = list(version_id))
+    old <- DBI::dbGetQuery(repo$con, "SELECT config_id, revision, payload_json, context_hash FROM configuration_revisions WHERE version_id = ? ORDER BY revision DESC LIMIT 1", params = list(version_id))
     actual <- if (nrow(old)) old$revision else 0L
     expected <- if (is.null(expected_revision)) 0L else expected_revision
     if (actual != expected) stop("stale configuration revision; reload before saving", call. = FALSE)
+    # Resolve inheritance under the same reservation as the revision check.
+    # Legacy payloads stay legacy: reading never invents validation metadata.
+    if (nrow(old) && hash_text(old$payload_json) != old$context_hash) stop("Configuration integrity mismatch before inheritance")
+    inherited <- if (nrow(old)) decode_json(old$payload_json)$validation_spec else NULL
+    payload$validation_spec <- if (is.null(validation_spec)) inherited else validation_spec
+    text <- json_text(payload)
     DBI::dbExecute(repo$con, "INSERT INTO configuration_revisions VALUES (?, ?, ?, ?, ?, ?, ?, ?)", params = list(id, version_id, actual + 1L,
       if (nrow(old)) old$config_id else NA_character_, text, hash_text(text), actor_id, utc_now()))
   })
