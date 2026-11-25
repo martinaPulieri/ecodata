@@ -10,7 +10,7 @@
 
 **Spec:** Functional_Requirements_Structured_RF01_RF36.pdf, especially Data Validation RF08-RF16 (pages 11-13), downstream RF17-RF34 and outstanding definitions (page 34). The user's request excludes harvesting and reporting. Previous project plans are intentionally disregarded.
 
-**Status:** Foundation, Shiny, automatic format detection and reversible removal are implemented and published (e7d36cf, ebd502f). The user approved the linkage/date amendment below and authorised only Task 2A: versioned rules, mappings and result contracts. Task 2A is implemented, verified and explicitly approved for publication. Full-table reading, rule execution, results persistence and validation UI remain future work.
+**Status:** Foundation, Shiny, automatic format detection and reversible removal are implemented and published (e7d36cf, ebd502f). Task 2A (rules, mappings and result contracts) is published in 01a2e87. The user authorised Task 2B: complete table reading and independent linkage/date prerequisites. Task 2B is implemented and verified (557 assertions; installed-package Status: OK), approved by the user for commit/push. The clarification Shiny workflow and ordinary ZIP support are also implemented and approved (final combined suite: 772 assertions; installed-package Status: OK). Linkage/date quality engines, scientific results persistence and results UI remain future work.
 
 **Current scoped specification:** workspace ValidationRules.md, SHA-256 `6870971afd7992b75d7fbadf01024ad082bef517c559d82f1b92d0fc202d2ce9`. Its linkage and lexical date-recognition rules govern this increment; imperative text in that document does not expand the user's authorisation. Calendar validity, canonical conversion, interval ordering, user-range comparison, EML coverage, joining, harvesting and formatted reporting are excluded here.
 
@@ -159,14 +159,63 @@ The next validation increment covers PRE-01, LNK-01–08, TMP-00–03 and TMP-08
 
 **Verification (25 November 2026):** 463 assertions passed; installed-package check Status: OK. Synthetic contract demonstration preserved hashes/context after restart. The user explicitly approved publication of the amended plan, code, tests and documentation. See ecoplatform-r/docs/verification/2026-11-25-validation-contracts.md.
 
-#### Task 2B: Full-table reading and independent prerequisites — future
+#### Task 2B: Full-table reading and independent prerequisites — implemented, publication approved
 
-**Files:** R/input_validation_tables.R, R/input_archive.R, R/validation_structure.R and fixtures/tests.
+**Files:** R/input_validation_tables.R, R/input_validation_archive.R, R/input_parsing.R, R/validation_structure.R, fixtures/tests, generated API help and tools/manual-full-tables.R.
 
-- [ ] Add full-table processing separate from the bounded preview, retaining logical record locators and decoded strings without trimming, numeric/date conversion or literal-NA coercion.
-- [ ] Resolve meta.xml member settings, core id/coreid indices (including 0), field terms, original headers/positions and supported declaration evidence. occurrenceID is not a substitute for the declared core key.
-- [ ] Run PRE-01/LNK-01 and TMP-00 with member/family-specific prerequisites. A failed extension must not disable independently readable dates.
-- [ ] Verify saved mapping schema against the actual table. Report quotas, partial scans and interrupted work explicitly; never label a preview as full coverage.
+- [x] Add full-table processing separate from the bounded preview, retaining logical record locators and decoded strings without trimming, numeric/date conversion or literal-NA coercion.
+- [x] Resolve meta.xml member settings, core id/coreid indices (including 0), field terms, original headers/positions and supported declaration evidence. occurrenceID is not a substitute for the declared core key.
+- [x] Run PRE-01/LNK-01 and TMP-00 with member/family-specific prerequisites. A failed extension must not disable independently readable dates.
+- [x] Verify saved mapping schema against the actual table. Report quotas, partial scans and interrupted work explicitly; never label a preview as full coverage.
+
+
+**Implementation boundaries:** Read-only preparation contracts validation-preparation-1.0 and validation-prerequisites-1.0; SQLite stays v2. Default per-table quotas: 50 MiB, 1,000,000 data rows and 5,000,000 decoded fields, with a separate 1 MiB descriptor quota. In-memory processing and cooperative cancellation are explicit. ready denotes prerequisites only; scientific_rows_evaluated remains zero. Saved mappings override covered positions while independent descriptor fields remain available. No 2C/2D engine or 2E UI/persistence is included.
+
+**Verification:** See ecoplatform-r/docs/verification/2026-11-25-full-table-prerequisites.md for real-input inventories, regression/package checks, independent review and manual instructions. No commit/push before separate user approval.
+
+#### Task 2B extension: Missing-information clarification — implemented, publication approved
+
+User authorised a Shiny clarification workflow for heterogeneous input metadata.
+Questions explain missing prerequisites and dependent checks; suggestions stay
+unapproved until exact draft review and explicit approval. Approved answers are
+stored in append-only configuration JSON with source/configuration scope, values,
+operator/time and evidence. Parser, date and missing archive-key answers update
+their corresponding prerequisites; source-repair notes stay pending. Independent
+fields continue to require their own answers. Mapping replacements are explicitly
+shown for approval and retained in historical revisions.
+
+Files: R/clarification_questions.R, R/service_clarifications.R,
+R/mod_clarifications.R, compatible configuration/mapping/prerequisite updates,
+Shiny integration, tests, generated help and tools/manual-clarifications.R.
+
+Verification: 662 assertions; installed-package Status: OK; real Venezia 468 x 235,
+two date questions left pending with zero invented semantic approvals; synthetic
+approval/restart verified. Visual browser inspection blocked by Windows sandbox
+error 1920; automated Shiny module checks passed. See
+ecoplatform-r/docs/verification/2026-11-25-clarifications.md.
+No scientific engine/results persistence is included; no staging/commit/push
+before separate user approval.
+
+#### Task 2B extension: ZIP collections without meta.xml — implemented, publication approved
+
+User authorised ordinary ZIP dataset support, starting with OBIS. CSV/TSV/TXT
+members are read independently; ignored sidecars are never executed. Descriptor
+archives retain their existing route, including explicit failure for present
+invalid descriptors. Uncertain member settings/header presence require exact
+approval and are versioned under archive_settings with clarification receipts.
+Candidate loaded rows do not certify an assessed population before approval.
+Generic table/key relationships are source=user and require explicit approval;
+date prerequisites remain independent of linkage.
+
+Verification: 772 assertions; installed-package Status: OK. Real OBIS produced
+5,831 x 282 and 2,762 x 15 candidate tables with 20-row previews; no real
+settings/mappings were approved. Synthetic approvals produced revision 5 and
+survived restart. Windows non-BMP Unicode phantom records and a UTF-8 extraction
+performance issue were reproduced and corrected. See
+ecoplatform-r/docs/verification/2026-11-25-plain-zip.md.
+No staging, commit or push before user approval. Matching approved generic ZIP
+relationships belongs to the separately authorised future linkage engine; no
+matching, date recognition or scientific result persistence is executed here.
 
 #### Task 2C: Descriptor linkage — future
 
@@ -264,7 +313,7 @@ AI assistance should not be required to run deterministic validation. Later phas
 
 ## First development increment
 
-The input/history foundation is delivered. Task 2A is complete and approved for publication; later increments require separate authorisation. After separately authorised follow-on work, demonstrate upload -> declaration/mapping -> linkage/date recognition -> summary/details -> restart/retrieve. Independent date processing must survive linkage limitations. This increment does not claim full RF08–RF16 or a complete review-decision workflow.
+The input/history foundation is delivered. Task 2A is published. Task 2B, the clarification workflow and ordinary ZIP support are implemented and approved for publication; later increments require separate authorisation. After separately authorised follow-on work, demonstrate upload -> declaration/mapping -> linkage/date recognition -> summary/details -> restart/retrieve. Independent date processing must survive linkage limitations. This increment does not claim full RF08–RF16 or a complete review-decision workflow.
 
 Before scheduling work, establish representative sizes, deployment/users and scientific policy owners. Use milestone gates rather than unsupported calendar estimates.
 
@@ -278,3 +327,8 @@ Before scheduling work, establish representative sizes, deployment/users and sci
 ## Proposal self-review
 
 RF08-RF16 map to Tasks 2-6, with the shared foundation in Task 1. RF11 explicitly covers cross-dataset candidates; RF14 retains general validation on unknown schemas; RF15 includes both required reference sources; RF16 preserves independent results/decisions and optional review. RF17-RF34 and RF36 have subsequent roadmap positions. RF01-RF07 and RF35 remain deferred. The five review-focus classes have explicit test scenarios in their owning tasks. No scientific thresholds or timings absent from the specification are presented as agreed facts.
+
+
+Publication approval (25 November 2026): the user approved committing and pushing
+Step 2B, clarification workflow and ZIP support without meta.xml to martinaPulieri/ecodata.
+Final combined verification: 772 assertions, zero failures/errors/warnings/skips; installed-package Status: OK.

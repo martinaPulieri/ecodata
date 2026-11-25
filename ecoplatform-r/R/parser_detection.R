@@ -41,8 +41,13 @@ detect_parser <- function(path, original_name = basename(path), max_sample_bytes
   if (is.na(info$size) || info$isdir) stop("Detection requires an existing regular file")
   con <- file(path, "rb")
   bytes <- tryCatch(readBin(con, "raw", n = max_sample_bytes), finally = close(con))
+  detect_parser_sample(bytes,result,info$size>length(bytes),quote)
+}
+
+# Shared byte-sample detector: archive members never need temporary extraction.
+detect_parser_sample <- function(bytes,result,sample_truncated,quote) {
   result$sample_bytes <- length(bytes)
-  result$sample_truncated <- info$size > length(bytes)
+  result$sample_truncated <- sample_truncated
   result$sample_sha256 <- digest::digest(bytes, algo = "sha256", serialize = FALSE)
   if (!length(bytes)) return(result)
   prefix <- function(values) length(bytes) >= length(values) && identical(bytes[seq_along(values)], as.raw(values))
@@ -139,6 +144,10 @@ is_incomplete_unicode_tail <- function(bytes, trim, encoding) {
 # still validates their field placement. This pass only finds complete physical
 # record boundaries, respecting doubled quotes and quoted multiline content.
 complete_detection_prefix <- function(text, quote) {
+  # Internal text has already been decoded to UTF-8. Mark it explicitly:
+  # Windows native strings can count non-BMP code points as two units and
+  # strsplit() then pads the token vector with phantom empty characters.
+  Encoding(text) <- "UTF-8"
   chars <- strsplit(text, "", fixed = TRUE)[[1]]
   quoted <- FALSE
   last <- 0L

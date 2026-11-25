@@ -12,9 +12,11 @@ save_configuration(
   schema = list(profile_id = "generic_tabular", confirmed = FALSE, evidence = ""),
   expected_revision = NULL,
   actor_id,
-  parser_detection = list(),
+  parser_detection = NULL,
   expected_workspace_revision = NULL,
-  validation_spec = NULL
+  validation_spec = NULL,
+  clarifications = NULL,
+  archive_settings = NULL
 )
 }
 \arguments{
@@ -37,7 +39,9 @@ per-resource parser overrides are not supported.}
 
 \item{parser_detection}{Optional named per-resource detection evidence. Each
 entry must match that resource's immutable byte hash. Manual edits may
-preserve this evidence without claiming their overrides were detected.}
+preserve this evidence without claiming their overrides were detected.
+Omitted entries inherit prior evidence atomically, so unrelated edits cannot
+silently remove an unresolved confirmation requirement.}
 
 \item{expected_workspace_revision}{Optional displayed lifecycle revision.
 NULL captures current membership at entry; writes recheck it atomically.}
@@ -46,6 +50,10 @@ NULL captures current membership at entry; writes recheck it atomically.}
 the latest revision's specification (or its absence). Supply an explicit
 empty specification to clear mappings. Declared table schemas are checked
 structurally here; actual source/header prerequisites belong to validation.}
+
+\item{clarifications}{Approved clarification receipts; NULL inherits existing receipts. An explicit empty list clears them in the new revision only.}
+
+\item{archive_settings}{Optional named resource/member settings for ZIPs without a descriptor; NULL inherits existing settings. Each setting has parser and header. Approval evidence is recorded separately.}
 }
 \value{
 Snapshot including config_id, revision, hash and complete payload.

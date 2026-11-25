@@ -203,3 +203,20 @@ Before the first commit, establish the local checkout from the existing remote a
 6. Complete RF08-RF16 acceptance, recovery and workload qualification.
 
 The first demonstration should load a generic ecological CSV and a small declared DwC-A, inspect and confirm configuration, detect structural/relational issues, save a review decision, restart and retrieve the same history. This demonstrates the first increment, not full validation coverage.
+
+## Approved validation preparation increments
+
+Step 2B now reads complete tables and assesses independent linkage/date
+prerequisites. The Shiny clarification workflow saves explicitly approved
+answers as versioned configurations. Ordinary ZIP collections without meta.xml,
+including the supplied OBIS example, support independent table reading and
+member-specific settings/mapping approval. Source datasets stay unchanged.
+
+The user approved publication of code, tests, plans and documentation on
+25 November 2026. Final combined verification: 772 passed assertions and
+installed-package Status: OK. No scientific linkage matching or date recognition
+is included in these increments.
+
+See the [OBIS/ZIP verification](ecoplatform-r/docs/verification/2026-11-25-plain-zip.md),
+[clarification guide](ecoplatform-r/docs/user-guide/clarifications.md) and
+[updated implementation plan](docs/superpowers/plans/2026-11-23-ecological-platform-validation-first.md).

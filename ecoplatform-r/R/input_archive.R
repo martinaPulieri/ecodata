@@ -28,10 +28,11 @@ read_member <- function(path, member, max_bytes) {
   bytes
 }
 
-inspect_archive <- function(path, resource_id, preview_rows, max_preview_bytes) {
+inspect_archive <- function(path, resource_id, preview_rows, max_preview_bytes, configuration=NULL) {
   entries <- utils::unzip(path, list = TRUE)
   check_archive_entries(entries)
-  metas <- entries$Name[grepl("(^|/)meta\\.xml$", entries$Name)]
+  metas <- entries$Name[grepl("(^|/)meta\\.xml$", entries$Name,ignore.case=TRUE)]
+  if(!length(metas))return(inspect_plain_archive(path,resource_id,preview_rows,max_preview_bytes,configuration))
   if (length(metas) != 1L) return(list(status = "unsupported", diagnostic = "ZIP has no single supported DwC-A meta.xml descriptor", tables = list(), schema_candidates = character()))
   bytes <- read_member(path, metas, min(max_preview_bytes, 1024^2))
   if (grepl("<!DOCTYPE|<!ENTITY", rawToChar(bytes), ignore.case = TRUE)) stop("DTD/entity declarations are not supported")

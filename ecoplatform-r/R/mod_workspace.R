@@ -176,7 +176,7 @@ workspace_server <- function(id, repo) {
         details <- if (nrow(rows)) {
           ctx <- current_context()
           p <- ctx$config$parsers[[ctx$resource_id]]
-          if (tolower(tools::file_ext(ctx$resource$original_name)) == "zip") shiny::p("La lettura delle tabelle usa le impostazioni dichiarate nel meta.xml dell'archivio.")
+          if (tolower(tools::file_ext(ctx$resource$original_name)) == "zip") shiny::p("Gli ZIP con meta.xml usano il descrittore. Per gli altri ZIP verifica e approva le impostazioni di ogni tabella in Informazioni mancanti.")
           else shiny::p(paste("Codifica:", p$encoding, "- Separatore:", if (p$delimiter == "\t") "tabulazione" else p$delimiter,
             "- Decimale:", p$decimal_mark, "- Delimitazione testo:", p$quote))
         } else shiny::p("Nessuna configurazione registrata.")
@@ -191,7 +191,7 @@ workspace_server <- function(id, repo) {
       archive <- tolower(tools::file_ext(ctx$resource$original_name)) == "zip"
       tabular <- tolower(tools::file_ext(ctx$resource$original_name)) %in% c("csv", "tsv")
       detection <- ctx$config$parser_detection[[ctx$resource_id]]
-      fields <- if (archive) shiny::div(class = "alert alert-info", "La lettura delle tabelle usa le impostazioni dichiarate nel meta.xml dell'archivio.") else shiny::div(class = "parser-grid",
+      fields <- if (archive) shiny::div(class = "alert alert-info", "Gli ZIP con meta.xml usano il descrittore. Per gli altri ZIP verifica e approva le impostazioni di ogni tabella in Informazioni mancanti.") else shiny::div(class = "parser-grid",
         shiny::selectInput(ns("delimiter"), "Separatore", choices = c("Virgola (,)" = ",", "Punto e virgola (;)" = ";", "Tabulazione" = "\t", "Barra verticale (|)" = "|"), selected = p$delimiter),
         shiny::selectInput(ns("encoding"), "Codifica", choices = c("UTF-8", "windows-1252", "latin1", "UTF-16LE", "UTF-16BE"), selected = p$encoding),
         shiny::selectInput(ns("decimal_mark"), "Separatore decimale dichiarato", choices = c("Punto (.)" = ".", "Virgola (,)" = ","), selected = p$decimal_mark),
@@ -256,6 +256,10 @@ workspace_server <- function(id, repo) {
       events <- get_operation(repo, input$operation)$events
       data.frame(Passo = events$sequence, Stato = events$status, Data = events$created_at, Operatore = events$actor_id)
     }, striped = TRUE, rownames = FALSE)
+    # Keep context tokens current while the operator uses another tab.
+    shiny::outputOptions(output,"parser_form",suspendWhenHidden=FALSE)
+    clarification <- workspace_clarifications(input,output,session,repo,current_context,
+      check_form,state,refresh_configs,tell,attempt)
     list(context = current_context, inspection = shiny::reactive(state$inspection))
   })
 }

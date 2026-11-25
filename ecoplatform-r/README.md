@@ -69,3 +69,46 @@ code, tests and documentation. See the [removal verification summary](docs/verif
 for executed checks, scope and operational limits.
 
 The user approved publication of input registration, the Shiny interface and automatic format detection, including tests and documentation. See the [verification summary](docs/verification/2026-11-24-foundation-shiny-detection.md) for scope and executed checks. Generated evidence and runtime data remain local; future implementation increments still require their own approval.
+
+## Step 2B: complete reading and independent prerequisites
+
+The read-only services read_validation_tables() and
+assess_validation_prerequisites() prepare complete populations independently of
+the Shiny preview. They preserve source strings and descriptor key indices,
+reject stale mapping schemas, and separate linkage from date prerequisites.
+ready denotes prerequisite readiness; zero rows have been scientifically checked.
+
+See [architecture](docs/architecture/full-table-prerequisites.md),
+[manual checks](docs/user-guide/full-table-prerequisites.md) and
+[verification](docs/verification/2026-11-25-full-table-prerequisites.md).
+The user approved publication of this increment on 25 November 2026.
+
+## Missing-information clarification
+
+The Informazioni mancanti tab asks for dataset-specific prerequisites and shows
+unapproved suggestions. Review an exact answer, then approve it to create one
+versioned configuration with source-bound provenance. Cancelling saves nothing.
+Independent fields remain available; an explanatory source-repair note leaves
+its blocked prerequisites pending.
+
+See the [operator guide](docs/user-guide/clarifications.md),
+[service architecture](docs/architecture/clarifications.md) and
+[verification results](docs/verification/2026-11-25-clarifications.md).
+The user approved publication of the implementation on 25 November 2026.
+
+## ZIP collections without a descriptor
+
+Ordinary ZIPs with CSV/TSV/TXT members are now read independently when meta.xml is
+absent. Per-member format/header settings and user-declared table relationships
+use the clarification approval workflow and versioned configuration receipts.
+Ignored sidecars are listed without execution. Proposed counts remain distinct
+from confirmed populations. Present invalid descriptors are not bypassed.
+
+See [operator guide](docs/user-guide/plain-zip.md),
+[architecture](docs/architecture/plain-zip.md) and
+[verification](docs/verification/2026-11-25-plain-zip.md).
+
+
+Publication approval (25 November 2026): the user approved committing and pushing
+Step 2B, clarification workflow and ZIP support without meta.xml to martinaPulieri/ecodata.
+Final combined verification: 772 assertions, zero failures/errors/warnings/skips; installed-package Status: OK.

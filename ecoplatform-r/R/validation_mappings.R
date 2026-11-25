@@ -89,17 +89,19 @@ validate_date_mapping <- function(mapping) {
 #' @param actor_id Explicit provenance label.
 #' @param evidence Exact declaration evidence; no inferred occurrenceID substitution.
 #' @param confirmed Whether the supported relationship has been confirmed.
+#' @param source descriptor (default) or user for explicitly supplied missing keys.
 #' @return Descriptor linkage declaration; no joins or linkage checks are executed.
 #' @export
 new_linkage_mapping <- function(core_table, core_id_position, extension_table,
-  extension_reference_position, mapping_id, actor_id, evidence, confirmed = FALSE) {
+  extension_reference_position, mapping_id, actor_id, evidence, confirmed = FALSE, source = "descriptor") {
   validate_table_contract(core_table); validate_table_contract(extension_table)
   if (is.null(core_table$member) || is.null(extension_table$member) ||
       core_table$version_id != extension_table$version_id || core_table$resource_id != extension_table$resource_id) stop("Linkage must remain within one archive")
   if (core_table$table_id == extension_table$table_id) stop("Core and extension must be different tables")
   scalar_text(mapping_id, "mapping_id"); scalar_text(actor_id, "actor_id"); scalar_text(evidence, "descriptor evidence")
   if (!is.logical(confirmed) || length(confirmed) != 1L || is.na(confirmed)) stop("Invalid confirmed flag")
-  contract_copy(list(mapping_id = mapping_id, source = "descriptor", actor_id = actor_id,
+  source <- contract_enum(source,c("descriptor","user"),"linkage source")
+  contract_copy(list(mapping_id = mapping_id, source = source, actor_id = actor_id,
     evidence = evidence, confirmed = confirmed,
     core = list(table = core_table, column = column_contract(core_table, core_id_position)),
     extension = list(table = extension_table, column = column_contract(extension_table, extension_reference_position))))
@@ -108,7 +110,7 @@ new_linkage_mapping <- function(core_table, core_id_position, extension_table,
 validate_linkage_mapping <- function(mapping) {
   rebuilt <- new_linkage_mapping(mapping$core$table, mapping$core$column$position,
     mapping$extension$table, mapping$extension$column$position, mapping$mapping_id,
-    mapping$actor_id, mapping$evidence, mapping$confirmed)
+    mapping$actor_id, mapping$evidence, mapping$confirmed, mapping$source)
   if (!contract_equal(mapping, rebuilt)) stop("Invalid linkage mapping")
   invisible(mapping)
 }

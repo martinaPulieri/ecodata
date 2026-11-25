@@ -18,18 +18,22 @@
 #' @param parser_detection Optional named per-resource detection evidence. Each
 #'   entry must match that resource's immutable byte hash. Manual edits may
 #'   preserve this evidence without claiming their overrides were detected.
+#'   Omitted entries inherit prior evidence atomically, so unrelated edits cannot
+#'   silently remove an unresolved confirmation requirement.
 #' @param expected_workspace_revision Optional displayed lifecycle revision.
 #'   NULL captures current membership at entry; writes recheck it atomically.
 #' @param validation_spec Optional new_validation_spec() snapshot. NULL preserves
 #'   the latest revision's specification (or its absence). Supply an explicit
 #'   empty specification to clear mappings. Declared table schemas are checked
 #'   structurally here; actual source/header prerequisites belong to validation.
+#' @param clarifications Approved clarification receipts; NULL inherits existing receipts. An explicit empty list clears them in the new revision only.
+#' @param archive_settings Optional named resource/member settings for ZIPs without a descriptor; NULL inherits existing settings. Each setting has parser and header. Approval evidence is recorded separately.
 #' @return Snapshot including config_id, revision, hash and complete payload.
 #' @export
 save_configuration <- function(repo, version_id, parsers = NULL, metadata = list(),
   schema = list(profile_id = "generic_tabular", confirmed = FALSE, evidence = ""),
-  expected_revision = NULL, actor_id, parser_detection = list(), expected_workspace_revision = NULL,
-  validation_spec = NULL) {
+  expected_revision = NULL, actor_id, parser_detection = NULL, expected_workspace_revision = NULL,
+  validation_spec = NULL, clarifications = NULL, archive_settings = NULL) {
   scalar_text(actor_id, "actor_id")
   membership <- assert_workspace_active(repo, version_id, expected_workspace_revision)
   resources <- get_input(repo, version_id)$resources
@@ -42,7 +46,7 @@ save_configuration <- function(repo, version_id, parsers = NULL, metadata = list
     if (json_text(parsers[[rid]]) != json_text(defaults[[rid]])) stop("ZIP member parser settings come from the immutable descriptor")
   }
   if (!is.list(metadata)) stop("metadata must be a list")
-  if (!is.list(parser_detection)) stop("parser_detection must be a list")
+  if (!is.null(parser_detection) && !is.list(parser_detection)) stop("parser_detection must be a list")
   if (length(parser_detection)) {
     if (is.null(names(parser_detection)) || anyDuplicated(names(parser_detection)) || any(!names(parser_detection) %in% resources$resource_id)) stop("Detection evidence must bind known resources")
     for (rid in names(parser_detection)) {
@@ -62,6 +66,7 @@ save_configuration <- function(repo, version_id, parsers = NULL, metadata = list
     profile_catalogue_version = profile_catalogue()$catalogue_version,
     parser_engine_version = "lexical-preview-1.0")
   if (!is.null(validation_spec)) validate_validation_spec(validation_spec, version_id, resources$resource_id)
+  if (!is.null(clarifications)) validate_clarification_receipts(clarifications,version_id,resources$resource_id)
   id <- new_id(repo, "config")
   with_write(repo$con, function() {
     assert_workspace_active(repo, version_id, membership)
@@ -74,6 +79,19 @@ save_configuration <- function(repo, version_id, parsers = NULL, metadata = list
     if (nrow(old) && hash_text(old$payload_json) != old$context_hash) stop("Configuration integrity mismatch before inheritance")
     inherited <- if (nrow(old)) decode_json(old$payload_json)$validation_spec else NULL
     payload$validation_spec <- if (is.null(validation_spec)) inherited else validation_spec
+    prior_clarifications <- if(nrow(old)) decode_json(old$payload_json)$clarifications else NULL
+    receipts <- if(is.null(clarifications)) prior_clarifications else clarifications
+    if(!is.null(receipts))payload$clarifications <- receipts
+    # Omitting evidence during an unrelated edit cannot waive pending review.
+    previous_detection <- if(nrow(old)) decode_json(old$payload_json)$parser_detection else list()
+    detection <- if(is.null(parser_detection)) previous_detection else parser_detection
+    if(is.null(detection))detection<-list()
+    for(rid in setdiff(names(previous_detection),names(detection)))detection[[rid]]<-previous_detection[[rid]]
+    payload$parser_detection <- detection
+    previous_settings <- if(nrow(old))decode_json(old$payload_json)$archive_settings else NULL
+    if(!is.null(archive_settings))validate_archive_settings(archive_settings,resources,previous_settings)
+    settings <- if(is.null(archive_settings))previous_settings else archive_settings
+    if(!is.null(settings))payload$archive_settings <- settings
     text <- json_text(payload)
     DBI::dbExecute(repo$con, "INSERT INTO configuration_revisions VALUES (?, ?, ?, ?, ?, ?, ?, ?)", params = list(id, version_id, actual + 1L,
       if (nrow(old)) old$config_id else NA_character_, text, hash_text(text), actor_id, utc_now()))

@@ -42,6 +42,8 @@ workspace_ui <- function(id = "workspace") {
                 shiny::p(class = "muted", "Scegli come interpretare il file, senza alterarne i byte."))),
               shiny::selectInput(ns("config"), "Revisione salvata", choices = character()),
               shiny::uiOutput(ns("parser_form")))),
+          shiny::tabPanel("Informazioni mancanti", value = "clarifications",
+            shiny::div(class = "surface tab-surface", shiny::uiOutput(ns("clarification_panel")))),
           shiny::tabPanel("Anteprima", value = "preview",
             shiny::div(class = "surface tab-surface", shiny::uiOutput(ns("preview_summary")),
               shiny::uiOutput(ns("table_selector")),

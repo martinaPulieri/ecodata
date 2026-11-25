@@ -31,7 +31,7 @@ inspect_input <- function(version_id, config_id, repo, preview_rows = 20L, max_p
         table <- parse_preview(raw, config$parsers[[resource$resource_id]], preview_rows, resource$resource_id, "table")
         list(status = "ready", diagnostic = "Lexical preview only; no scientific checks executed", tables = list(table), schema_candidates = character())
       } else if (extension == "zip") {
-        inspect_archive(resource$owned_path, resource$resource_id, preview_rows, max_preview_bytes)
+        inspect_archive(resource$owned_path, resource$resource_id, preview_rows, max_preview_bytes,config)
       } else list(status = "unsupported", diagnostic = "Unsupported format; original file retained", tables = list(), schema_candidates = character())
     }, error = function(e) list(status = "unreadable", diagnostic = conditionMessage(e), tables = list(), schema_candidates = character()))
     result$resource_id <- resource$resource_id
@@ -47,7 +47,7 @@ inspect_input <- function(version_id, config_id, repo, preview_rows = 20L, max_p
   list(version_id = version_id, config_id = config_id, resources = output)
 }
 
-parse_preview <- function(bytes, parser, preview_rows, resource_id, table_key, header = TRUE, record_separator = NULL) {
+parse_preview <- function(bytes, parser, preview_rows, resource_id, table_key, header = TRUE, record_separator = NULL, max_cells = Inf, cancelled = NULL) {
   parser <- validate_parser(parser)
   if (!length(bytes)) stop("Empty input has no table header")
   # Decode raw vectors directly: UTF-16 legitimately contains zero bytes, which
@@ -61,10 +61,10 @@ parse_preview <- function(bytes, parser, preview_rows, resource_id, table_key, h
   if (!nzchar(text)) stop("Empty input has no table header")
   # A small strict lexer avoids read.table's quote removal in malformed fields
   # and newline normalisation inside quoted values. All values stay character.
-  records <- lexical_records(text, parser, preview_rows + as.integer(header) + 1L, record_separator)
+  records <- lexical_records(text, parser, preview_rows + as.integer(header) + 1L, record_separator, max_cells, cancelled)
   if (!length(records)) stop("No readable table records")
   width <- length(records[[1]])
-  if (any(lengths(records) != width)) stop("Ragged table: inconsistent field counts in preview")
+  if (any(lengths(records) != width)) stop("Ragged table: inconsistent field counts")
   columns <- if (header) records[[1]] else paste0("column_", seq_len(width))
   rows <- if (header) records[-1] else records
   matrix <- if (length(rows)) matrix(unlist(rows, use.names = FALSE), ncol = width, byrow = TRUE) else matrix(character(), nrow = 0L, ncol = width)
@@ -84,7 +84,11 @@ parse_preview <- function(bytes, parser, preview_rows, resource_id, table_key, h
 # quote may be followed only by an escaped quote, delimiter, terminator or EOF.
 # Field content is sliced from the original decoded text, retaining embedded
 # CR, LF and CRLF. Only enclosure and doubled-quote escaping are interpreted.
-lexical_records <- function(text, parser, limit, record_separator = NULL) {
+lexical_records <- function(text, parser, limit, record_separator = NULL, max_cells = Inf, cancelled = NULL) {
+  # Internal text has already been decoded to UTF-8. Mark it explicitly:
+  # Windows native strings can count non-BMP code points as two units and
+  # strsplit() then pads the token vector with phantom empty characters.
+  Encoding(text) <- "UTF-8"
   chars <- strsplit(text, "", fixed = TRUE)[[1]]
   n <- length(chars)
   i <- 1L
@@ -93,8 +97,11 @@ lexical_records <- function(text, parser, limit, record_separator = NULL) {
   quoted <- FALSE
   fields <- character()
   rows <- list()
+  seen_cells <- 0
   field_value <- function(end) {
-    value <- if (end >= start) substr(text, start, end) else ""
+    # Slice the already-tokenised characters: substr(text, start, end) rescans
+    # a UTF-8 prefix for every field and becomes quadratic on wide tables.
+    value <- if (end >= start) paste0(chars[seq.int(start, end)], collapse = "") else ""
     if (quoted) {
       value <- if (nchar(value) > 2L) substr(value, 2L, nchar(value) - 1L) else ""
       value <- gsub(paste0(parser$quote, parser$quote), parser$quote, value, fixed = TRUE)
@@ -102,6 +109,7 @@ lexical_records <- function(text, parser, limit, record_separator = NULL) {
     value
   }
   while (i <= n) {
+    if (!is.null(cancelled) && i %% 4096L == 0L && cancelled()) read_stop('cancelled', 'Reading cancelled during lexical scan')
     ch <- chars[i]
     if (state == "quoted") {
       if (nzchar(parser$quote) && ch == parser$quote) state <- "after_quote"
@@ -117,6 +125,8 @@ lexical_records <- function(text, parser, limit, record_separator = NULL) {
     newline <- ch %in% c("\r", "\n")
     if (state == "after_quote" && !delimiter && !newline) stop("Invalid character after closing quote")
     if (delimiter || newline) {
+      seen_cells <- seen_cells + 1
+      if (seen_cells > max_cells) read_stop('limited', 'Decoded field quota exceeded')
       fields <- c(fields, field_value(i - 1L))
       if (newline) {
         actual_separator <- if (ch == "\r" && i < n && chars[i + 1L] == "\n") "\r\n" else ch
@@ -140,6 +150,9 @@ lexical_records <- function(text, parser, limit, record_separator = NULL) {
     i <- i + 1L
   }
   if (state == "quoted") stop("Unclosed quoted field")
-  if (start <= n || length(fields)) rows[[length(rows) + 1L]] <- c(fields, field_value(n))
+  if (start <= n || length(fields)) {
+    if (seen_cells + 1 > max_cells) read_stop('limited', 'Decoded field quota exceeded')
+    rows[[length(rows) + 1L]] <- c(fields, field_value(n))
+  }
   rows
 }

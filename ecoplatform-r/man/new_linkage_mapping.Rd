@@ -12,7 +12,8 @@ new_linkage_mapping(
   mapping_id,
   actor_id,
   evidence,
-  confirmed = FALSE
+  confirmed = FALSE,
+  source = "descriptor"
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ to the same source version and resource.}
 \item{evidence}{Exact declaration evidence; no inferred occurrenceID substitution.}
 
 \item{confirmed}{Whether the supported relationship has been confirmed.}
+
+\item{source}{descriptor (default) or user for explicitly supplied missing keys.}
 }
 \value{
 Descriptor linkage declaration; no joins or linkage checks are executed.
