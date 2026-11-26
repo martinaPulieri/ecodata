@@ -1,7 +1,7 @@
 # Missing-information questions and approved answers
 
-Open **Informazioni mancanti** for an active input and its latest configuration.
-Choose **Verifica informazioni mancanti**. The application reads complete tables
+Open **Missing information** for an active input and its latest configuration.
+Choose **Check missing information**. The application reads complete tables
 within the Step 2B quotas, then shows questions for the selected file. Each
 question explains why information is needed and which prerequisites depend on it.
 
@@ -16,14 +16,13 @@ Supported answers:
   by occurrenceID. Conflicting, invalid or out-of-range declarations require a
   corrected source.
 - Source repair: explain missing files, unavailable descriptors, unsupported
-  relationships or failed source integrity. Use **Aggiungi dati** to register a
+  relationships or failed source integrity. Use **Add data** to register a
   corrected source. An approved note records the answer but leaves checks pending.
 
-**Usa come bozza (non salva)** copies a suggestion into the controls. It does not
+**Use as draft (does not save)** copies a suggestion into the controls. It does not
 approve a role or save a configuration. Fill in the role/columns and evidence,
-then choose **Rivedi la risposta**. The modal shows the exact values and any
-mapping replacements. **Annulla** writes nothing. Only **Approva e salva nuova
-revisione** accepts the displayed draft.
+then choose **Review answer**. The modal shows the exact values and any
+mapping replacements. **Cancel** writes nothing. Only **Approve and save new revision** accepts the displayed draft.
 
 Where old mappings compete for the same relationship or refer to stale headers,
 the modal lists the mappings to replace. Approval retires those mappings from
@@ -65,7 +64,7 @@ requests, receipt persistence after reopen and unchanged original hashes.
 
 Browser checks:
 1. Launch tools/launch-shiny.R against the isolated acceptance runtime.
-2. Select Venezia, open Informazioni mancanti, request information and use a
+2. Select Venezia, open Missing information, request information and use a
    suggestion. Verify that configuration revision stays 1 and the role is blank.
 3. Use the synthetic fixture to fill a known role and review it. Inspect the
    exact columns/evidence; cancel and verify no new revision.

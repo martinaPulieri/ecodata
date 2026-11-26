@@ -41,7 +41,7 @@ test_that("Shiny cannot approve a draft after switching context or operator", {
     session$setInputs(clarify_review=1)
     session$setInputs(actor="bob",clarify_approve=1)
     expect_equal(nrow(list_configurations(repo,f$v$version_id)),1L)
-    expect_match(state$notice,"operatore|operator")
+    expect_match(state$notice,"operator")
     session$setInputs(version=other$v$version_id,resource=other$v$resource_ids[1],config=other$cfg$config_id)
     session$setInputs(form_context=current_context()$token,clarify_approve=2)
     expect_null(clarification$state$draft)

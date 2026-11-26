@@ -29,11 +29,11 @@ workspace_lifecycle <- function(input, output, session, repo, state, tell, attem
     row <- selected()
     if (!nrow(row)) return(NULL)
     if (view() == "removed") shiny::tagList(
-      shiny::p(class = "field-help", "Originali e storico conservati. Nessuno spazio su disco e' stato liberato."),
-      workspace_bound_button(ns, "restore", "Ripristina nel workspace", row$version_id, row$workspace_revision))
+      shiny::p(class = "field-help", "Original files and history are preserved. No disk space has been freed."),
+      workspace_bound_button(ns, "restore", "Restore to workspace", row$version_id, row$workspace_revision))
     else shiny::tagList(
-      shiny::p(class = "field-help", "L'azione riguarda questa versione e tutti i suoi file."),
-      shiny::actionButton(ns("remove"), "Rimuovi dal workspace", icon = shiny::icon("box-archive"), class = "btn-outline-danger full-width"))
+      shiny::p(class = "field-help", "This action applies to this version and all its files."),
+      shiny::actionButton(ns("remove"), "Remove from workspace", icon = shiny::icon("box-archive"), class = "btn-outline-danger full-width"))
   })
   output$undo_removal <- shiny::renderUI({
     undo <- state$undo
@@ -41,12 +41,12 @@ workspace_lifecycle <- function(input, output, session, repo, state, tell, attem
     row <- snapshot()
     row <- row[row$version_id == undo$version_id, , drop = FALSE]
     if (!nrow(row) || row$workspace_state != "removed" || row$workspace_revision != undo$revision) return(NULL)
-    shiny::div(class = "alert alert-info", role = "status", "Input rimosso. Originali e storico sono conservati. ",
-      workspace_bound_button(ns, "undo_remove", "Annulla rimozione", undo$version_id, undo$revision))
+    shiny::div(class = "alert alert-info", role = "status", "Input removed. Original files and history are preserved. ",
+      workspace_bound_button(ns, "undo_remove", "Undo removal", undo$version_id, undo$revision))
   })
   shiny::observeEvent(input$remove, attempt(function() {
     row <- selected()
-    if (view() != "active" || nrow(row) != 1L || !identical(input$version, row$version_id) || row$workspace_state != "active") stop("Seleziona una versione attiva")
+    if (view() != "active" || nrow(row) != 1L || !identical(input$version, row$version_id) || row$workspace_state != "active") stop("Select an active version")
     manifest <- get_input(repo, row$version_id)
     request <- new_id(repo, "workspace_request")
     state$pending_removal <- list(version_id = row$version_id, revision = row$workspace_revision, request_id = request)
@@ -55,15 +55,15 @@ workspace_lifecycle <- function(input, output, session, repo, state, tell, attem
     # Carry the token on the clicked button, so delayed clicks from an old
     # dialog cannot acquire the identity of a newly opened confirmation.
     confirm <- shiny::tags$button(type = "button", id = ns("confirm_remove_button"), class = "btn btn-danger",
-      onclick = sprintf("Shiny.setInputValue('%s', '%s', {priority: 'event'});", ns("confirm_remove"), request), "Rimuovi dal workspace")
+      onclick = sprintf("Shiny.setInputValue('%s', '%s', {priority: 'event'});", ns("confirm_remove"), request), "Remove from workspace")
     cancel <- shiny::tags$button(type = "button", id = ns("cancel_remove_button"), class = "btn btn-outline-secondary",
-      onclick = sprintf("Shiny.setInputValue('%s', '%s', {priority: 'event'});", ns("cancel_remove"), request), "Mantieni nel workspace")
-    shiny::showModal(shiny::modalDialog(title = "Rimuovere dal workspace?", easyClose = FALSE,
+      onclick = sprintf("Shiny.setInputValue('%s', '%s', {priority: 'event'});", ns("cancel_remove"), request), "Keep in workspace")
+    shiny::showModal(shiny::modalDialog(title = "Remove from workspace?", easyClose = FALSE,
       shiny::strong(title), shiny::p(shiny::tags$code(row$version_id)),
-      shiny::p(paste(nrow(manifest$resources), "file;", nrow(list_configurations(repo, row$version_id)), "configurazioni;",
-        sum(list_operations(repo)$version_id == row$version_id), "operazioni conservate.")),
+      shiny::p(paste(nrow(manifest$resources), "files;", nrow(list_configurations(repo, row$version_id)), "configurations;",
+        sum(list_operations(repo)$version_id == row$version_id), "operations preserved.")),
       shiny::tags$ul(lapply(manifest$resources$original_name, shiny::tags$li)),
-      shiny::p("La versione e tutti i suoi file scompariranno dall'elenco attivo. Originali, configurazioni e storico restano conservati. Puoi ripristinarli da Rimossi; nessuno spazio su disco viene liberato."),
+      shiny::p("This version and all its files will leave the active list. Original files, configurations and history are preserved. You can restore them from Removed; no disk space is freed."),
       footer = shiny::tagList(cancel, confirm)))
   }))
   shiny::observeEvent(input$cancel_remove, {
@@ -85,12 +85,12 @@ workspace_lifecycle <- function(input, output, session, repo, state, tell, attem
   shiny::observeEvent(input$confirm_remove, attempt(function() {
     pending <- state$pending_removal
     if (is.null(pending) || !identical(input$confirm_remove, pending$request_id) ||
-        !identical(input$version, pending$version_id) || view() != "active") stop("Il contesto della conferma e' cambiato. Riapri la finestra.")
+        !identical(input$version, pending$version_id) || view() != "active") stop("The confirmation context has changed. Reopen the dialog.")
     on.exit({ state$pending_removal <- NULL; shiny::removeModal() }, add = TRUE)
     event <- set_workspace_state(repo, pending$version_id, "removed", pending$revision, pending$request_id, input$actor)
     state$undo <- list(version_id = event$version_id, revision = event$revision)
     refresh()
-    tell("Versione rimossa dal workspace. Puoi ripristinarla da Rimossi.")
+    tell("Version removed from the workspace. You can restore it from Removed.")
   }))
   restore <- function(version, revision) {
     set_workspace_state(repo, version, "active", revision, new_id(repo, "workspace_request"), input$actor)
@@ -98,17 +98,17 @@ workspace_lifecycle <- function(input, output, session, repo, state, tell, attem
     state$undo <- NULL
     shiny::updateRadioButtons(session, "workspace_filter", selected = "active")
     refresh()
-    tell("Versione ripristinata. Configurazioni e storico sono invariati.")
+    tell("Version restored. Configurations and history are unchanged.")
   }
   shiny::observeEvent(input$restore, attempt(function() {
     row <- selected()
-    if (view() != "removed" || nrow(row) != 1L || !identical(input$version, row$version_id) || row$workspace_state != "removed") stop("Seleziona una versione rimossa")
+    if (view() != "removed" || nrow(row) != 1L || !identical(input$version, row$version_id) || row$workspace_state != "removed") stop("Select a removed version")
     check_workspace_click(input$restore, row$version_id, row$workspace_revision)
     restore(row$version_id, row$workspace_revision)
   }))
   shiny::observeEvent(input$undo_remove, attempt(function() {
     undo <- state$undo
-    if (is.null(undo)) stop("Nessuna rimozione da annullare")
+    if (is.null(undo)) stop("No removal to undo")
     check_workspace_click(input$undo_remove, undo$version_id, undo$revision)
     restore(undo$version_id, undo$revision)
   }))
@@ -117,8 +117,8 @@ workspace_lifecycle <- function(input, output, session, repo, state, tell, attem
     if (!nrow(row)) return(NULL)
     events <- list_workspace_events(repo, row$version_id)
     if (!nrow(events)) return(NULL)
-    data.frame(Revisione = events$revision, Stato = ifelse(events$state == "removed", "Rimosso", "Ripristinato"),
-      Operatore = events$actor_id, Data = events$created_at)
+    data.frame(Revision = events$revision, Status = ifelse(events$state == "removed", "Removed", "Restored"),
+      Operator = events$actor_id, Date = events$created_at)
   }, striped = TRUE, rownames = FALSE)
   list(snapshot = snapshot, view = view, selected = selected,
     configurations = configurations, operations = operations)
@@ -133,5 +133,5 @@ workspace_bound_button <- function(ns, id, label, version_id, revision) {
 
 check_workspace_click <- function(payload, version_id, revision) {
   if (!is.list(payload) || !identical(payload$version_id, version_id) ||
-      is.null(payload$revision) || workspace_revision(payload$revision) != revision) stop("Il contesto del pulsante e' cambiato. Ricarica e riprova.")
+      is.null(payload$revision) || workspace_revision(payload$revision) != revision) stop("The button context has changed. Reload and try again.")
 }

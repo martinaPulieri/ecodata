@@ -19,9 +19,9 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
   shiny::observeEvent(input$clarify_load,attempt(function() {
     ctx<-check_form()
     local$draft<-NULL;local$request<-NULL
-    local$request<-shiny::withProgress(message="Verifica informazioni necessarie",value=0.2,
+    local$request<-shiny::withProgress(message="Checking required information",value=0.2,
       prepare_clarifications(repo,ctx$version_id,ctx$config$config_id,ctx$workspace_revision))
-    tell("Informazioni verificate. I suggerimenti attendono la tua approvazione.","info")
+    tell("Information checked. Suggestions await your approval.","info")
   }))
 
   output$clarification_panel <- shiny::renderUI({
@@ -31,20 +31,20 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
     questions<-if(is.null(local$request))list() else
       Filter(function(q)q$resource_id==ctx$resource_id,local$request$questions)
     shiny::tagList(
-      shiny::h2("Informazioni da chiarire"),
-      shiny::p("Dataset diversi possono richiedere informazioni diverse. Ogni domanda spiega quali controlli dipendono dalla risposta."),
+      shiny::h2("Information to clarify"),
+      shiny::p("Different datasets may require different information. Each question explains which checks depend on the answer."),
       shiny::div(class="alert alert-info",
-        "I suggerimenti sono bozze. Solo Approva e salva applica la risposta in una nuova revisione. I controlli indipendenti restano disponibili; nessun controllo scientifico viene eseguito qui."),
-      if(editable)shiny::actionButton(ns("clarify_load"),"Verifica informazioni mancanti",class="btn-primary")
-      else shiny::p("Vista storica o rimossa: risposte in sola lettura. Seleziona la revisione attiva piu' recente per rispondere."),
-      if(!is.null(local$request)&&!length(questions))shiny::p("Nessuna richiesta di chiarimento per questo file nella configurazione selezionata."),
+        "Suggestions are drafts. Only Approve and save applies an answer in a new revision. Independent checks remain available; no scientific checks are run here."),
+      if(editable)shiny::actionButton(ns("clarify_load"),"Check missing information",class="btn-primary")
+      else shiny::p("Historical or removed view: answers are read-only. Select the latest active revision to answer."),
+      if(!is.null(local$request)&&!length(questions))shiny::p("No clarification is required for this file in the selected configuration."),
       if(length(questions))shiny::tagList(
-        shiny::p(paste(length(questions),"richieste per il file selezionato. Un problema del linkage non blocca le date indipendenti.")),
-        shiny::selectInput(ns("clarify_question"),"Informazione richiesta",choices=stats::setNames(
+        shiny::p(paste(length(questions),"questions for the selected file. A linkage issue does not block independent date checks.")),
+        shiny::selectInput(ns("clarify_question"),"Required information",choices=stats::setNames(
           vapply(questions,function(q)q$question_id,character(1)),
           vapply(seq_along(questions),function(i)paste(i,clarification_label(questions[[i]]$type),questions[[i]]$member),character(1))))),
       shiny::uiOutput(ns("clarification_form")),
-      shiny::h3("Risposte approvate nella revisione selezionata"),
+      shiny::h3("Approved answers in the selected revision"),
       shiny::div(class="table-scroll",shiny::tableOutput(ns("clarification_history"))))
   })
   output$clarification_form <- shiny::renderUI({
@@ -57,47 +57,47 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
       parser=clarification_parser_fields(ns,ctx$config$parsers[[q$resource_id]]),
       archive_parser=shiny::tagList(
         clarification_parser_fields(ns,table$proposed_setting$parser),
-        shiny::checkboxInput(ns("clarify_header"),"La prima riga contiene intestazioni",value=table$proposed_setting$header)),
+        shiny::checkboxInput(ns("clarify_header"),"The first row contains column headers",value=table$proposed_setting$header)),
       archive_linkage={
         labels<-vapply(q$table_choices,function(t)t$member,character(1))
         values<-vapply(q$table_choices,function(t)t$table_id,character(1))
         shiny::tagList(
-          shiny::p("Conferma entrambe le tabelle e il significato delle chiavi. Il nome id non prova una relazione; dataset_id potrebbe essere necessario per lo scope."),
-          shiny::selectInput(ns("clarify_core_table"),"Tabella principale",c("Seleziona"="",stats::setNames(values,labels))),
-          shiny::selectInput(ns("clarify_extension_table"),"Tabella dei riferimenti",c("Seleziona"="",stats::setNames(values,labels))),
+          shiny::p("Confirm both tables and the meaning of their keys. The name id does not prove a relationship; dataset_id may be needed to define the scope."),
+          shiny::selectInput(ns("clarify_core_table"),"Main table",c("Select"="",stats::setNames(values,labels))),
+          shiny::selectInput(ns("clarify_extension_table"),"Reference table",c("Select"="",stats::setNames(values,labels))),
           shiny::uiOutput(ns("archive_linkage_columns")))
       },
       date_mapping=shiny::tagList(
-        shiny::textInput(ns("clarify_role"),"Ruolo della data (richiesto)",placeholder="Es. sampling_date oppure analysis_date"),
-        shiny::radioButtons(ns("clarify_mode"),"Struttura",c("Un campo"="single","Componenti separate"="split"),inline=TRUE),
+        shiny::textInput(ns("clarify_role"),"Date role (required)",placeholder="E.g. sampling_date or analysis_date"),
+        shiny::radioButtons(ns("clarify_mode"),"Structure",c("Single field"="single","Separate components"="split"),inline=TRUE),
         shiny::conditionalPanel(sprintf("input['%s'] === 'single'",ns("clarify_mode")),
-          shiny::selectInput(ns("clarify_value"),"Campo data",c("Seleziona una colonna"="",choices)),
-          shiny::selectInput(ns("clarify_order"),"Ordine documentato (facoltativo)",c("Non documentato: conserva ambiguita'"="","Giorno / mese / anno"="DMY","Mese / giorno / anno"="MDY","Anno / mese / giorno"="YMD"))),
+          shiny::selectInput(ns("clarify_value"),"Date field",c("Select a column"="",choices)),
+          shiny::selectInput(ns("clarify_order"),"Documented order (optional)",c("Undocumented: preserve ambiguity"="","Day / month / year"="DMY","Month / day / year"="MDY","Year / month / day"="YMD"))),
         shiny::conditionalPanel(sprintf("input['%s'] === 'split'",ns("clarify_mode")),
-          shiny::selectInput(ns("clarify_day"),"Colonna giorno",c("Seleziona"="",choices)),
-          shiny::selectInput(ns("clarify_month"),"Colonna mese",c("Seleziona"="",choices)),
-          shiny::selectInput(ns("clarify_year"),"Colonna anno",c("Seleziona"="",choices)))),
+          shiny::selectInput(ns("clarify_day"),"Day column",c("Select"="",choices)),
+          shiny::selectInput(ns("clarify_month"),"Month column",c("Select"="",choices)),
+          shiny::selectInput(ns("clarify_year"),"Year column",c("Select"="",choices)))),
       linkage_mapping={
         core<-find_prepared_table(local$request$preparation,q$core_table_id)
-        shiny::tagList(shiny::p("Indica la chiave del core e il riferimento dell'estensione. occurrenceID non sostituisce automaticamente id."),
-          shiny::selectInput(ns("clarify_core"),"Chiave core",c("Seleziona"="",column_choices(core$schema))),
-          shiny::selectInput(ns("clarify_reference"),"Riferimento estensione",c("Seleziona"="",choices)))
+        shiny::tagList(shiny::p("Specify the core key and the extension reference. occurrenceID does not automatically replace id."),
+          shiny::selectInput(ns("clarify_core"),"Core key",c("Select"="",column_choices(core$schema))),
+          shiny::selectInput(ns("clarify_reference"),"Extension reference",c("Select"="",choices)))
       },
       source_repair=shiny::tagList(
-        shiny::p("Carica una nuova versione con il file/descrittore corretto tramite Aggiungi dati. Gli originali registrati restano immutabili."),
-        shiny::textAreaInput(ns("clarify_note"),"Informazioni dal responsabile dei dati / azione necessaria",rows=3)))
+        shiny::p("Upload a new version with the corrected file or descriptor using Add data. Registered originals remain immutable."),
+        shiny::textAreaInput(ns("clarify_note"),"Information from the data owner / required action",rows=3)))
     shiny::tagList(
       shiny::div(class="alert alert-warning",shiny::strong(clarification_label(q$type)),
-        if(!is.null(q$member))shiny::p(paste("Tabella:",q$member)),
-        shiny::p(q$reason),shiny::p(paste("Controlli dipendenti:",paste(unlist(q$dependent_checks),collapse=", "))),
-        if(q$status=="awaiting_source")shiny::p("Risposta registrata; in attesa di una sorgente utilizzabile. Il controllo resta non valutato.")),
+        if(!is.null(q$member))shiny::p(paste("Table:",q$member)),
+        shiny::p(q$reason),shiny::p(paste("Dependent checks:",paste(unlist(q$dependent_checks),collapse=", "))),
+        if(q$status=="awaiting_source")shiny::p("Answer recorded; awaiting a usable source. The check remains not evaluated.")),
       if(length(q$suggestions))shiny::tags$details(open=NA,
-        shiny::tags$summary("Suggerimento non approvato"),
+        shiny::tags$summary("Unapproved suggestion"),
         shiny::p(clarification_suggestion_text(q)),
-        shiny::actionButton(ns("clarify_suggest"),"Usa come bozza (non salva)")),
+        shiny::actionButton(ns("clarify_suggest"),"Use as draft (does not save)")),
       fields,
-      shiny::textAreaInput(ns("clarify_evidence"),"Motivazione / evidenza della risposta (richiesta)",rows=2),
-      shiny::actionButton(ns("clarify_review"),"Rivedi la risposta",class="btn-primary"))
+      shiny::textAreaInput(ns("clarify_evidence"),"Reason / evidence for the answer (required)",rows=2),
+      shiny::actionButton(ns("clarify_review"),"Review answer",class="btn-primary"))
   })
   output$archive_linkage_columns<-shiny::renderUI({
     q<-current_question();shiny::req(q$type=="archive_linkage",input$clarify_core_table,input$clarify_extension_table)
@@ -108,8 +108,8 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
     core_selected<-if(!is.null(hint)&&identical(hint$core_table_id,core$table_id))hint$core_position else ""
     ext_selected<-if(!is.null(hint)&&identical(hint$extension_table_id,ext$table_id))hint$extension_position else ""
     shiny::tagList(
-      shiny::selectInput(ns("clarify_core"),"Chiave della tabella principale",c("Seleziona"="",column_choices(core$schema)),selected=as.character(core_selected)),
-      shiny::selectInput(ns("clarify_reference"),"Chiave di riferimento",c("Seleziona"="",column_choices(ext$schema)),selected=as.character(ext_selected)))
+      shiny::selectInput(ns("clarify_core"),"Main table key",c("Select"="",column_choices(core$schema)),selected=as.character(core_selected)),
+      shiny::selectInput(ns("clarify_reference"),"Reference key",c("Select"="",column_choices(ext$schema)),selected=as.character(ext_selected)))
   })
   shiny::observeEvent(input$clarify_suggest,attempt(function() {
     check_form();q<-current_question()
@@ -138,12 +138,12 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
       if(!is.null(answer$extension_position))shiny::updateSelectInput(session,"clarify_reference",selected=as.character(answer$extension_position))
     }
     local$draft<-NULL
-    tell("Suggerimento copiato nella bozza. Completa la risposta, rivedila e approvala esplicitamente.","info")
+    tell("Suggestion copied to the draft. Complete the answer, review it and explicitly approve it.","info")
   }))
   shiny::observeEvent(input$clarify_review,attempt(function() {
     check_form();q<-current_question()
     position<-function(value) {
-      if(is.null(value)||!grepl("^(0|[1-9][0-9]*)$",value))stop("Seleziona una colonna")
+      if(is.null(value)||!grepl("^(0|[1-9][0-9]*)$",value))stop("Select a column")
       as.numeric(value)
     }
     answer<-switch(q$type,
@@ -165,84 +165,84 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
     local$draft<-NULL
     local$draft<-preview_clarification_answer(repo,local$request,q$question_id,
       answer,input$clarify_evidence,input$actor)
-    shiny::showModal(shiny::modalDialog(title="Approva questa risposta",
-      shiny::p("Controlla i valori: verranno salvati in una nuova revisione. Chiudere o annullare non applica nulla."),
+    shiny::showModal(shiny::modalDialog(title="Approve this answer",
+      shiny::p("Review the values: they will be saved in a new revision. Closing or cancelling applies nothing."),
       shiny::tags$pre(clarification_review_text(local$draft)),
-      if(q$type=="source_repair")shiny::p("Questa nota non rende il file leggibile e non sblocca i controlli dipendenti."),
-      footer=shiny::tagList(shiny::actionButton(ns("clarify_cancel"),"Annulla"),
-        shiny::actionButton(ns("clarify_approve"),"Approva e salva nuova revisione",class="btn-primary")),
+      if(q$type=="source_repair")shiny::p("This note does not make the file readable or unblock dependent checks."),
+      footer=shiny::tagList(shiny::actionButton(ns("clarify_cancel"),"Cancel"),
+        shiny::actionButton(ns("clarify_approve"),"Approve and save new revision",class="btn-primary")),
       easyClose=FALSE,size="l"),session=session)
   }))
   shiny::observeEvent(input$clarify_cancel,{
     local$draft<-NULL;shiny::removeModal(session=session)
-    tell("Bozza annullata. Nessuna risposta applicata.","info")
+    tell("Draft cancelled. No answer applied.","info")
   })
   shiny::observeEvent(input$clarify_approve,attempt(function() {
     ctx<-check_form();draft<-local$draft
-    if(is.null(draft))stop("Nessuna risposta in attesa di approvazione")
-    if(!identical(input$actor,draft$actor_id))stop("L'operatore e' cambiato: rivedi la risposta")
+    if(is.null(draft))stop("No answer awaiting approval")
+    if(!identical(input$actor,draft$actor_id))stop("The operator has changed: review the answer")
     if(!identical(ctx$config$config_id,draft$config_id)||
-       !identical(ctx$resource_id,draft$question$resource_id))stop("Contesto cambiato: rivedi la risposta")
+       !identical(ctx$resource_id,draft$question$resource_id))stop("Context changed: review the answer")
     saved<-approve_clarification_answer(repo,draft,TRUE)
     local$draft<-NULL;local$request<-NULL
     shiny::removeModal(session=session)
     refresh_configs(ctx$version_id,saved$config_id)
     state$source_tick<-state$source_tick+1L
-    tell(paste("Risposta approvata nella revisione",saved$revision,
-      ". Le revisioni precedenti restano disponibili."))
+    tell(paste("Answer approved in revision",saved$revision,
+      ". Previous revisions remain available."))
   }))
   output$clarification_history <- shiny::renderTable({
     ctx<-current_context()
     receipts<-Filter(function(r)r$resource_id==ctx$resource_id,clarification_receipts(ctx$config))
-    if(!length(receipts))return(data.frame(Informazione="Nessuna risposta approvata in questa revisione."))
-    data.frame(Informazione=vapply(receipts,function(r)clarification_label(r$type),character(1)),
-      Risposta=vapply(receipts,function(r)clarification_receipt_text(r),character(1)),
-      Operatore=vapply(receipts,function(r)r$actor_id,character(1)),
-      Approvazione=vapply(receipts,function(r)r$approved_at,character(1)),
-      Evidenza=vapply(receipts,function(r)r$evidence,character(1)),check.names=FALSE)
+    if(!length(receipts))return(data.frame(Information="No approved answers in this revision."))
+    data.frame(Information=vapply(receipts,function(r)clarification_label(r$type),character(1)),
+      Answer=vapply(receipts,function(r)clarification_receipt_text(r),character(1)),
+      Operator=vapply(receipts,function(r)r$actor_id,character(1)),
+      Approval=vapply(receipts,function(r)r$approved_at,character(1)),
+      Evidence=vapply(receipts,function(r)r$evidence,character(1)),check.names=FALSE)
   },striped=TRUE,rownames=FALSE)
   list(state=local)
 }
 
 column_choices <- function(table)stats::setNames(as.character(seq_along(table$headers)-1L),
   vapply(seq_along(table$headers),function(i)paste0(i-1L," - ",table$headers[[i]]),character(1)))
-clarification_label <- function(type)switch(type,parser="Formato di lettura",
-  date_mapping="Ruolo e campi data",linkage_mapping="Chiavi della relazione",
-  archive_parser="Formato e intestazioni della tabella ZIP",archive_linkage="Relazione tra tabelle ZIP",
-  source_repair="Sorgente o dichiarazione da integrare")
+clarification_label <- function(type)switch(type,parser="Reading format",
+  date_mapping="Date role and fields",linkage_mapping="Relationship keys",
+  archive_parser="ZIP table format and headers",archive_linkage="Relationship between ZIP tables",
+  source_repair="Source or declaration requiring clarification")
 clarification_suggestion_text <- function(q) {
   s<-q$suggestions[[1]]
-  if(q$type=="date_mapping")paste(s$evidence,"Colonne:",paste(vapply(s$columns,
+  if(q$type=="date_mapping")paste(s$evidence,"Columns:",paste(vapply(s$columns,
     function(c)paste(c$position,c$original_header,sep=" - "),character(1)),collapse="; "),
-    ". Il ruolo deve essere confermato dall'operatore.")
+    ". The role must be confirmed by the operator.")
   else s$evidence
 }
 clarification_review_text <- function(draft) {
   value<-draft$reviewed_answer
-  answer<-if(draft$question$type=="date_mapping")list(ruolo=value$date_role,
-    colonne=value$columns,ordine=value$date_order) else if(draft$question$type%in%c("linkage_mapping","archive_linkage"))
-    list(tabella_principale=value$core$table$member,chiave_core=value$core$column,
-      tabella_riferimenti=value$extension$table$member,riferimento_estensione=value$extension$column) else value
-  jsonlite::toJSON(list(file=draft$question$original_name,tabella=draft$question$member,
-    informazione=clarification_label(draft$question$type),risposta=answer,
-    sostituzioni_da_approvare=draft$replacements,
-    operatore=draft$actor_id,evidenza=draft$evidence),auto_unbox=TRUE,pretty=TRUE,null="null")
+  answer<-if(draft$question$type=="date_mapping")list(role=value$date_role,
+    columns=value$columns,order=value$date_order) else if(draft$question$type%in%c("linkage_mapping","archive_linkage"))
+    list(main_table=value$core$table$member,core_key=value$core$column,
+      reference_table=value$extension$table$member,extension_reference=value$extension$column) else value
+  jsonlite::toJSON(list(file=draft$question$original_name,table=draft$question$member,
+    information=clarification_label(draft$question$type),answer=answer,
+    replacements_to_approve=draft$replacements,
+    operator=draft$actor_id,evidence=draft$evidence),auto_unbox=TRUE,pretty=TRUE,null="null")
 }
 
 clarification_receipt_text <- function(receipt) {
   value<-receipt$applied_value
   if(receipt$type=="archive_parser")return(paste(receipt$question$member,value$parser$encoding,
-    if(value$parser$delimiter=="\t")"tabulazione" else value$parser$delimiter,if(value$header)"con intestazioni" else "senza intestazioni"))
+    if(value$parser$delimiter=="\t")"tab" else value$parser$delimiter,if(value$header)"with headers" else "without headers"))
   if(receipt$type=="date_mapping")paste(value$date_role,
     paste(vapply(value$columns,function(c)paste(c$position,c$original_header,sep=" - "),character(1)),collapse="; "))
   else if(receipt$type%in%c("linkage_mapping","archive_linkage"))paste("Core",value$core$column$position,
     value$core$column$original_header,"->",value$extension$column$position,value$extension$column$original_header)
   else if(receipt$type=="source_repair")value$note
-  else paste(value$encoding,if(value$delimiter=="\t")"tabulazione" else value$delimiter,
-    "decimale",value$decimal_mark,"quote",value$quote)
+  else paste(value$encoding,if(value$delimiter=="\t")"tab" else value$delimiter,
+    "decimal mark",value$decimal_mark,"quote",value$quote)
 }
 clarification_parser_fields<-function(ns,parser)shiny::tagList(
-  shiny::selectInput(ns("clarify_encoding"),"Codifica da confermare",c("UTF-8","windows-1252","latin1","UTF-16LE","UTF-16BE"),selected=parser$encoding),
-  shiny::selectInput(ns("clarify_delimiter"),"Separatore da confermare",c("Virgola"=",","Punto e virgola"=";","Tabulazione"="\t","Barra verticale"="|"),selected=parser$delimiter),
-  shiny::selectInput(ns("clarify_decimal"),"Separatore decimale dichiarato",c("Punto"=".","Virgola"=","),selected=parser$decimal_mark),
-  shiny::selectInput(ns("clarify_quote"),"Delimitazione testo",c("Doppi apici"='"',"Nessuna"=""),selected=parser$quote))
+  shiny::selectInput(ns("clarify_encoding"),"Encoding to confirm",c("UTF-8","windows-1252","latin1","UTF-16LE","UTF-16BE"),selected=parser$encoding),
+  shiny::selectInput(ns("clarify_delimiter"),"Delimiter to confirm",c("Comma"=",","Semicolon"=";","Tab"="\t","Pipe"="|"),selected=parser$delimiter),
+  shiny::selectInput(ns("clarify_decimal"),"Declared decimal mark",c("Dot"=".","Comma"=","),selected=parser$decimal_mark),
+  shiny::selectInput(ns("clarify_quote"),"Text quoting",c("Double quotes"='"',"None"=""),selected=parser$quote))

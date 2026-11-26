@@ -82,7 +82,7 @@ test_that("Shiny rejects selection changes and stale dialog tokens", {
     session$setInputs(version = v$version_id, remove = 2)
     session$setInputs(confirm_remove = token)
     expect_equal(nrow(list_workspace_events(repo, v$version_id)), 0L)
-    expect_match(state$notice, "contesto")
+    expect_match(state$notice, "context")
   })
 })
 
@@ -95,7 +95,7 @@ test_that("removed view is read only and a remove restore cycle invalidates form
     old_token <- current_context()$token
     set_workspace_state(repo, v$version_id, "removed", 0L, "external-rm", "other")
     session$setInputs(workspace_filter = "removed", refresh = 1)
-    expect_match(as.character(output$parser_form$html), "sola lettura")
+    expect_match(as.character(output$parser_form$html), "read-only")
     session$setInputs(form_context = old_token, inspect = 1)
     expect_equal(nrow(list_operations(repo)), 0L)
     session$setInputs(restore = list(version_id = v$version_id, revision = 1L))

@@ -2,9 +2,9 @@
 
 ## Using the application
 
-For a new CSV/TSV upload, press Registra input as usual. The first configuration applies supported encoding/separator evidence automatically and displays a detection summary above the parser controls. No manual settings are required when both components are unambiguous.
+For a new CSV/TSV upload, press Register inputs as usual. The first configuration applies supported encoding/separator evidence automatically and displays a detection summary above the parser controls. No manual settings are required when both components are unambiguous.
 
-For a previously registered file, select its latest configuration in Dati e configurazione and press **Rileva formato**. This saves a new revision; the old UTF-8/default snapshot remains retrievable. Then press Genera anteprima. Historical configurations cannot be silently edited or redetected.
+For a previously registered file, select its latest configuration in Data and configuration and press **Detect format**. This saves a new revision; the old UTF-8/default snapshot remains retrievable. Then press Generate preview. Historical configurations cannot be silently edited or redetected.
 
 Manual overrides remain available. Save them explicitly as a new revision. The original detection evidence is retained separately; the summary identifies manual differences in encoding/separator instead of claiming the override was detected. Changing a dropdown alone still writes nothing.
 

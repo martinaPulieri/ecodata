@@ -2,7 +2,7 @@
 
 This R package implements local input registration, immutable configuration revisions and SQLite processing history, with a first Shiny interface for uploading files, configuring lexical previews and inspecting history. Scientific validators are not included yet. See the [approved workspace structure](../README.md), [storage contracts](docs/architecture/step1-storage.md) and [Shiny manual checks](docs/user-guide/shiny-workspace.md).
 
-New CSV/TSV uploads automatically detect supported encoding and separator when evidence is unambiguous. Detected settings and evidence are saved in revision 1. Manual controls remain available; **Rileva formato** redetects an already registered file into a new revision. Ambiguous legacy encodings and competing separator candidates are explicitly flagged for review. See [automatic detection](docs/user-guide/parser-detection.md).
+New CSV/TSV uploads automatically detect supported encoding and separator when evidence is unambiguous. Detected settings and evidence are saved in revision 1. Manual controls remain available; **Detect format** redetects an already registered file into a new revision. Ambiguous legacy encodings and competing separator candidates are explicitly flagged for review. See [automatic detection](docs/user-guide/parser-detection.md).
 
 The next approved slice (Task 2A) supplies versioned validation definitions,
 source-scoped mapping declarations and typed result contracts, stored in immutable
@@ -11,10 +11,14 @@ See [contract architecture](docs/architecture/validation-contracts.md) and
 [manual contract checks](docs/user-guide/validation-contracts.md). This increment
 has been reviewed and explicitly approved by the user for commit and push.
 
+The Shiny interface is in English, including clarification approvals and
+removal/restoration dialogs. Source values, user-entered text and saved history
+retain their original content. See the [English user guide and manual checks](docs/user-guide/shiny-workspace.md).
+
 ## Launch the interface
 
 Uploaded source versions can now be removed reversibly from active work and
-restored from **Rimossi**. Files and history remain stored; removal does not free
+restored from **Removed**. Files and history remain stored; removal does not free
 disk space. See [removal and manual checks](docs/user-guide/workspace-removal.md)
 and [schema v2 contracts](docs/architecture/workspace-lifecycle.md). Stop older
 app processes before opening an existing runtime with this version: it upgrades
@@ -85,7 +89,7 @@ The user approved publication of this increment on 25 November 2026.
 
 ## Missing-information clarification
 
-The Informazioni mancanti tab asks for dataset-specific prerequisites and shows
+The Missing information tab asks for dataset-specific prerequisites and shows
 unapproved suggestions. Review an exact answer, then approve it to create one
 versioned configuration with source-bound provenance. Cancelling saves nothing.
 Independent fields remain available; an explanatory source-repair note leaves

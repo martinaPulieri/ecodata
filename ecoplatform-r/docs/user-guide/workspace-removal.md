@@ -1,21 +1,20 @@
 # Reversible removal from the workspace
 
-In **Dati registrati**, choose **Attivi** and a **Versione di origine**, then
-**Rimuovi dal workspace**. The confirmation names the exact version, every
-file and the number of configurations and operations retained. **Mantieni nel
-workspace** cancels without writing an event.
+In **Registered data**, choose **Active** and a **Source version**, then
+**Remove from workspace**. The confirmation names the exact version, every
+file and the number of configurations and operations retained. **Keep in workspace** cancels without writing an event.
 
 Removal applies to the selected uploaded source version and all its files.
 Other deliveries in the same dataset are unaffected. Active selectors and the
-**Versioni attive / File attivi** counters exclude it; the old preview clears.
+**Active versions / Active files** counters exclude it; the old preview clears.
 Original bytes, configuration revisions, processing history and lineage remain
 stored. This action does **not** free disk space or erase data permanently.
 
-Use **Annulla rimozione** for the latest removal in this browser session, or
-choose **Rimossi**, select a version and click **Ripristina nel workspace**.
+Use **Undo removal** for the latest removal in this browser session, or
+choose **Removed**, select a version and click **Restore to workspace**.
 Restoration selects the original version with its existing configurations;
 it does not rerun an inspection. Removed versions expose saved parser settings,
-file identifiers/hashes and history in read-only form. **Storico** includes the
+file identifiers/hashes and history in read-only form. **History** includes the
 selected version's removal/restoration events and the full operation history.
 
 An input with queued/running operations cannot be removed. Complete or explicitly
@@ -34,12 +33,12 @@ Start with two uploaded versions, one containing two files with identical names.
 1. Generate a preview; record counts, configuration revision and operation ID.
 2. Open removal. Check version, both files and retained-history counts. Cancel:
    counts, selection and preview remain, and no lifecycle event is added.
-3. Confirm removal. Both files disappear together from Attivi; counts decrease;
+3. Confirm removal. Both files disappear together from Active; counts decrease;
    preview clears and the other version remains. No file is deleted.
-4. Click Annulla rimozione. The exact version returns. Generate its preview again
+4. Click Undo removal. The exact version returns. Generate its preview again
    with the same revision; compare values and original SHA-256.
-5. Remove again, reload the page, choose Rimossi. Inspect saved settings and
-   Storico. Save/detect/preview actions are unavailable. Restore and confirm
+5. Remove again, reload the page, choose Removed. Inspect saved settings and
+   History. Save/detect/preview actions are unavailable. Restore and confirm
    existing configuration IDs and operation history remain unchanged.
 6. Open two browser sessions. Keep a confirmation open in A; remove and restore
    the same version in B. Confirm in A: rejected, with no additional removal.
@@ -47,7 +46,7 @@ Start with two uploaded versions, one containing two files with identical names.
 7. Queue an operation through submit_operation(). Removal must fail for queued
    and running states. After a terminal event, removal is allowed.
 8. Remove the last active version: the empty state is usable, file/configuration
-   selectors clear, and Rimossi still allows restoration. Check at mobile width.
+   selectors clear, and Removed still allows restoration. Check at mobile width.
 
 ## Reproducible checks
 

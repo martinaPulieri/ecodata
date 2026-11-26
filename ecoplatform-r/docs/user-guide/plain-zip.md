@@ -12,14 +12,13 @@ reading. Nothing is extracted into the workspace.
 
 ## Operator workflow
 
-1. Register the ZIP normally and generate an **Anteprima**. Each readable table
+1. Register the ZIP normally and generate a **Preview**. Each readable table
    has its own selector. The preview is explicitly provisional where needed.
-2. Open **Informazioni mancanti** and choose **Verifica informazioni mancanti**.
+2. Open **Missing information** and choose **Check missing information**.
 3. For each member, inspect encoding, separator, quoting and whether the first
-   row contains headers. **Usa come bozza** fills a proposal without saving.
+   row contains headers. **Use as draft** fills a proposal without saving.
    Header presence is always uncertain without a declaration and needs approval.
-4. Review the exact member/settings/evidence, then **Approva e salva nuova
-   revisione**. Each approved answer creates one append-only configuration.
+4. Review the exact member/settings/evidence, then **Approve and save new revision**. Each approved answer creates one append-only configuration.
    Cancel saves nothing. Another member does not inherit this approval.
 5. Confirm date roles/components separately. A column named eventDate in a plain
    ZIP is a suggestion, not a descriptor declaration.
@@ -73,7 +72,7 @@ records and runtime databases are not included in Git.
 Browser checks:
 - Upload OBIS_VeniceLagoon.zip: the missing-meta.xml error should disappear.
 - Generate a preview: choose either TSV table and inspect the provisional notice.
-- Open Informazioni mancanti: verify that each format question names its member.
+- Open Missing information: verify that each format question names its member.
 - In a synthetic fixture, use a suggestion, review and cancel: no new revision.
 - Approve exact settings: one new revision, sibling still pending.
 - Review a relationship: both member names and exact key columns must be shown.

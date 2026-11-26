@@ -28,7 +28,7 @@ test_that("Shiny registration, explicit saves and inspection use the selected co
     ctx <- current_context()
     session$setInputs(form_context = ctx$token, save = 2)
     expect_equal(nrow(list_configurations(repo, vid)), 2L)
-    expect_match(state$notice, "storica")
+    expect_match(state$notice, "historical")
   })
 })
 
@@ -45,7 +45,7 @@ test_that("stale form events cannot change another file and repeat registration 
     cid <- list_configurations(repo, vid)$config_id
     session$setInputs(version = vid, resource = rid, config = cid, form_context = "wrong", save = 1)
     expect_equal(nrow(list_configurations(repo, vid)), 1L)
-    expect_match(state$notice, "contesto")
+    expect_match(state$notice, "context")
   })
 })
 
@@ -110,11 +110,11 @@ test_that("explicit detection in Shiny appends a revision without accepting a st
     expect_equal(nrow(list_operations(repo)), 0L)
     expect_equal(get_configuration(repo, first$config_id)$parsers[[rid]]$encoding, "UTF-8")
     session$setInputs(config = latest)
-    expect_match(as.character(output$parser_form$html), "Rilevamento automatico")
+    expect_match(as.character(output$parser_form$html), "Automatic detection")
     session$setInputs(form_context = current_context()$token, inspect = 1)
     expect_match(output$preview_table, "001")
     session$setInputs(form_context = "stale", detect = 2)
     expect_equal(nrow(list_configurations(repo, v$version_id)), 2L)
-    expect_match(state$notice, "contesto")
+    expect_match(state$notice, "context")
   })
 })

@@ -32,7 +32,7 @@ test_that("Shiny plain ZIP relationship review names both actual members and key
     pair<-q$suggestions[[1]]$answer
     session$setInputs(clarify_question=q$question_id,
       clarify_core_table=pair$core_table_id,clarify_extension_table=pair$extension_table_id)
-    expect_match(as.character(output$archive_linkage_columns$html),"Chiave")
+    expect_match(as.character(output$archive_linkage_columns$html),"key")
     session$setInputs(clarify_core="0",clarify_reference="0",clarify_evidence="Explicit synthetic relationship",clarify_review=1)
     expect_match(clarification_review_text(clarification$state$draft),"Occurrence.tsv")
     expect_match(clarification_review_text(clarification$state$draft),"MeasurementOrFact.tsv")

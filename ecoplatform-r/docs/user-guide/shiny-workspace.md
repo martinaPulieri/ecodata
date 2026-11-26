@@ -1,42 +1,91 @@
-# Prima interfaccia Shiny: guida e verifica manuale
+# Shiny workspace: user guide and manual checks
 
-## Avvio locale
+## Start locally
 
-Dal checkout, aprire ecoplatform-r/ e ripristinare le dipendenze descritte nel README. Per una libreria gia' predisposta impostare ECODATA_R_LIBRARY. Avviare:
+From the checkout, open ecoplatform-r/ and restore the dependencies described in
+the README. Set ECODATA_R_LIBRARY if using an existing local R library, then run:
 
-```text
-Rscript --vanilla tools/launch-shiny.R
-```
+    Rscript --vanilla tools/launch-shiny.R
 
-Il server ascolta soltanto su 127.0.0.1:8791. ECODATA_PORT permette di scegliere un'altra porta libera; ECODATA_RUNTIME_ROOT sceglie la cartella locale non sincronizzata dei dati. Senza override usa la cartella dati R dell'utente. Non usare Dropbox per il database attivo. Il processo deve restare avviato mentre si usa il browser.
+The server listens on 127.0.0.1:8791. ECODATA_PORT selects another available port;
+ECODATA_RUNTIME_ROOT selects a local, non-synchronised data directory. Without
+an override, the app uses the user's R data directory. Keep the active SQLite
+database outside Dropbox. The R process must remain running while using the app.
 
-Il caricamento Shiny ammette un corpo richiesta di 201 MiB; la registrazione controlla i byte effettivi con i limiti di 50 MiB per file e 200 MiB complessivi. Per avviare la cartella direttamente da RStudio e' disponibile anche app.R. Ogni sessione apre e chiude soltanto la propria connessione SQLite; i dati registrati restano disponibili alle sessioni successive.
+Shiny accepts a request body of 201 MiB. Registration checks actual bytes and
+enforces 50 MiB per file and 200 MiB per upload. You can also launch app.R from
+RStudio. Each browser session owns its own SQLite connection; registered data
+remain available after the session ends.
 
-## Prova dal browser
+## Language and stored data
 
-1. Aprire l'URL locale. A runtime nuovo, i tre contatori mostrano zero. Non e' prevista alcuna autenticazione in questa versione locale; Operatore e' un'etichetta di provenienza inserita dall'utente.
-2. In Aggiungi dati, scegliere tests/fixtures/tabular/interface-demo.csv. Scrivere un nome raccolta e un operatore; premere Registra input. La sola selezione di un file non lo registra.
-3. Verificare il nome originale interface-demo.csv e la revisione 1. Il separatore viene ora rilevato automaticamente come punto e virgola; codifica UTF-8. Gli identificatori distinguono anche risorse con lo stesso nome; il percorso temporaneo Shiny non diventa il nome del file.
-4. Verificare il rilevamento; impostare Separatore decimale dichiarato a Virgola. I cambiamenti manuali non salvano nulla finche' non si preme Salva nuova revisione. Per una configurazione precedente senza rilevamento e' disponibile Rileva formato.
-5. Salvare. Compare revisione 2; revisione 1 resta selezionabile e conserva i valori precedenti. Una revisione storica non presenta il pulsante di salvataggio. Un client obsoleto viene respinto anche dal server.
-6. Premere Genera anteprima. La scheda Anteprima mostra fino a venti righe. Verificare station 001/002/003, value 1,5/0/<0,1 e date 03/04/25/NA/2025: restano stringhe, senza inferenze di precisione o formato temporale.
-7. Aprire Storico. L'operazione di anteprima ha tre eventi queued, running e completed ed e' legata alla revisione 2. Unsupported/unreadable genera invece completed_with_limitations; l'integrita' fallita prima della sottomissione non e' un'anteprima riuscita.
-8. Selezionare una revisione/file diverso: l'anteprima precedente deve sparire. Generarne una nuova esplicitamente; non associare una vecchia anteprima alla nuova selezione.
-9. Ricaricare la pagina o aprire una seconda sessione. La raccolta, le revisioni e lo storico restano disponibili. Non vengono rieseguite automaticamente anteprime o operazioni pendenti.
-10. Ridurre la finestra: sotto 850 px i pannelli si dispongono verticalmente e le tabelle restano scorribili in orizzontale. Verificare che tutti i pulsanti siano raggiungibili.
+The interface is in English: navigation, controls, notifications, clarification
+questions, approval summaries, removal/restoration dialogs and history headings.
+New collections default to "New data" and the operator label to "local-reviewer".
+The operator label records provenance; it is not an authenticated identity.
 
-Per DwC-A i parser delle tabelle sono dichiarati nel meta.xml: il modulo non propone override non supportati. Un archivio senza descrittore riconosciuto resta conservato con una limitazione esplicita. L'anteprima di una versione considera i file di quella versione con la configurazione congelata; la tabella visibile segue il file selezionato.
+User-provided titles, filenames, column headers, source values, evidence and
+existing history records retain their original content. Internal status codes
+and configuration keys remain stable. No database migration is required.
 
-## Perimetro e codice
+## Manual browser checks
 
-Per rimozione reversibile, vista Rimossi, ripristino e relativi controlli manuali,
-vedere [workspace-removal.md](workspace-removal.md). La rimozione conserva tutti
-i byte e lo storico e riguarda la versione selezionata, con tutti i suoi file.
+Use a separate test runtime outside Dropbox.
 
-- app_ui.R: struttura delle tre viste; inst/www/workspace.css: stile locale e responsive.
-- mod_workspace.R: reattivita', eventi espliciti e guardie del contesto.
-- service_workspace.R: passaggio upload -> registrazione/configurazione e anteprima -> storico.
-- run_app.R: connessione posseduta dalla singola sessione; tools/launch-shiny.R: avvio locale.
-- test-shiny-workspace.R usa shiny::testServer; test-workspace-services.R verifica i servizi con SQLite reale.
+1. Open the local URL. On a fresh runtime, all three counters should show zero.
+   Check the English tabs: **Data and configuration**, **Missing information**,
+   **Preview** and **History**.
+2. Under **Add data**, choose tests/fixtures/tabular/interface-demo.csv. Enter a
+   **Collection name** and **Operator**, then click **Register inputs**.
+   Selecting a file alone does not register it.
+3. Check the original filename and revision 1. Automatic detection should report
+   UTF-8 and a semicolon delimiter. Identifiers distinguish resources with the
+   same filename; Shiny temporary paths do not replace original names.
+4. Set **Declared decimal mark** to **Comma (,)**. Controls alone save nothing.
+   Click **Save new revision**: revision 2 appears and revision 1 remains
+   selectable. Historical revisions offer no save button, and stale requests
+   are also rejected by the server. **Detect format** explicitly saves a new
+   detection revision for previously registered files.
+5. Click **Generate preview**. Check up to 20 rows in **Preview**. Values such
+   as station 001/002/003, value 1,5/0/<0,1 and date 03/04/25/NA/2025 must remain
+   strings; numeric precision and date order are not inferred.
+6. Open **History**. A successful preview has queued, running and completed
+   events tied to its exact configuration. Unreadable or unsupported resources
+   produce completed_with_limitations. Failed integrity checks do not count as
+   successful previews.
+7. Switch file or configuration: the previous preview must clear. Generate a
+   new preview explicitly. Reload the page or open a second session: inputs,
+   revisions and history must remain available without rerunning operations.
+8. Open **Missing information** and click **Check missing information**.
+   **Use as draft (does not save)** must not approve or persist a suggestion.
+   Complete the answer and evidence, then **Review answer**. Verify the English
+   summary headings and original source values. **Cancel** saves nothing;
+   **Approve and save new revision** saves exactly the reviewed draft.
+9. Under **Registered data**, choose an active source and **Remove from
+   workspace**. Check the exact version and retained-file/history counts.
+   **Keep in workspace** cancels. Confirm removal, then use **Undo removal** or
+   select **Removed** and **Restore to workspace**. Removed versions are
+   read-only; source hashes, configurations and history must be preserved.
+10. Narrow the browser below 850 px. Panels should stack vertically and tables
+    remain horizontally scrollable. Check that all English controls remain
+    reachable and readable.
 
-Nessun controllo scientifico, revisione di finding, harvesting o report Quarto e' stato aggiunto. I messaggi di completamento descrivono soltanto l'esecuzione dell'anteprima. Le modifiche richiedono ancora approvazione prima di commit/push.
+ZIP archives with meta.xml use the descriptor's parser declarations. Ordinary
+ZIP collections require approval of each table's settings in **Missing
+information**; see [plain-zip.md](plain-zip.md). The preview uses the selected
+version's configuration, and the visible table follows the selected file.
+
+## Code and related guides
+
+- R/app_ui.R: page layout; inst/www/workspace.css: local responsive styling.
+- R/mod_workspace.R: registration, parser controls, preview and history.
+- R/mod_clarifications.R: questions, draft/review/approval and receipt display.
+- R/service_workspace_lifecycle.R: removal, restoration and context guards.
+- R/service_workspace.R: upload registration and recorded preview services.
+- R/run_app.R and tools/launch-shiny.R: session connections and local launch.
+- tests/testthat/test-shiny-*.R: module workflows using shiny::testServer.
+
+See [workspace-removal.md](workspace-removal.md) for lifecycle checks and
+[clarifications.md](clarifications.md) for the approval workflow. Scientific
+validation engines have separate APIs and guides; these workspace controls run
+lexical previews and prepare clarification prerequisites.
