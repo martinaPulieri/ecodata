@@ -6,7 +6,8 @@ Description: Registers immutable ecological input files, preserves explicit pars
     and schema configuration revisions, and records processing history in SQLite.
     Defines versioned validation rules, mapping declarations and typed result
     contracts. Executes exact identifier linkage checks and compares candidate
-    key scopes while preserving source values.
+    key scopes while preserving source values. Recognises lexical date patterns
+    with explicit mapping provenance and unresolved date-order ambiguity.
 License: Apache License (== 2.0)
 Encoding: UTF-8
 Depends: R (>= 4.4.0)

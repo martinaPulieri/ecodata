@@ -2,6 +2,11 @@
 # They never read tables, recognise a pattern, join data or write to SQLite.
 result_base <- function(context, rule_id, kind) {
   validate_frozen_context(context)
+  result_base_from_validated(context, rule_id, kind)
+}
+
+# Internal path: callers must have validated this immutable context at entry.
+result_base_from_validated <- function(context, rule_id, kind) {
   scalar_text(rule_id, "rule_id")
   if (!rule_id %in% unlist(context$validation_spec$enabled_rules)) stop("Unknown or disabled rule")
   list(kind = kind, contract_version = context$contract_version,
@@ -91,6 +96,14 @@ new_check_result <- function(context, rule_id, table_ids, applicability, executi
 new_date_result <- function(context, mapping_id, row_number, original_values, status,
   candidates = character(), missing_components = NULL, reason = "") {
   validate_frozen_context(context)
+  date_result_from_validated(context, mapping_id, row_number, original_values,
+    status, candidates, missing_components, reason)
+}
+
+# The engine validates once per mapping; standalone public constructors still
+# validate every supplied context. Row values/status/candidates are always checked.
+date_result_from_validated <- function(context, mapping_id, row_number, original_values, status,
+  candidates = character(), missing_components = NULL, reason = "") {
   mapping <- mapped_contract(context, mapping_id, "date")
   status <- contract_enum(status, unlist(context$validation_spec$rules$snapshot$date_statuses), "status")
   split <- length(mapping$columns) == 3L
@@ -117,7 +130,7 @@ new_date_result <- function(context, mapping_id, row_number, original_values, st
   scalar_text(reason, "reason", empty = TRUE)
   if (status == "not_evaluated") scalar_text(reason, "reason")
   rule <- if (status == "not_evaluated") "TMP-00" else if (split) "TMP-03" else if (status == "missing") "TMP-01" else "TMP-02"
-  seal_result(c(result_base(context, rule, "date"), list(mapping_id = mapping_id,
+  seal_result(c(result_base_from_validated(context, rule, "date"), list(mapping_id = mapping_id,
     table_id = mapping$table$table_id, row_number = row_number,
     row_locator = row_locator(mapping$table$table_id, row_number), mapping = mapping,
     date_role = mapping$date_role, original_values = values, observed_widths = lapply(values, nchar),
@@ -212,14 +225,15 @@ new_validation_finding <- function(context, rule_id, table_id, row_numbers, orig
 # Portable records must satisfy their typed contract as well as their digest.
 # A recomputed unkeyed hash cannot legitimise contradictory source identities,
 # mapping provenance, candidate definitions or rule/row locator metadata.
-validate_row_result <- function(context, mapping_id, record, kind) {
+validate_row_result <- function(context, mapping_id, record, kind, context_validated = FALSE) {
   payload <- record; payload$record_hash <- NULL
   if (!identical(record$record_hash, hash_text(json_text(payload)))) stop("Result record hash mismatch")
   if (!identical(record$context_hash, context$context_hash) || !identical(record$kind, kind) ||
       !identical(record$mapping_id, mapping_id)) stop("Result belongs to another context or mapping")
   if (kind == "date") {
     ids <- vapply(record$candidates, function(x) scalar_text(x$pattern_id, "candidate pattern ID"), character(1))
-    rebuilt <- new_date_result(context, mapping_id, record$row_number, record$original_values,
+    construct <- if (context_validated) date_result_from_validated else new_date_result
+    rebuilt <- construct(context, mapping_id, record$row_number, record$original_values,
       record$status, ids, as.character(unlist(record$missing_components)), record$reason)
   } else {
     mapping <- mapped_contract(context, mapping_id, "linkage")
@@ -247,7 +261,7 @@ summarise_row_contracts <- function(context, mapping_id, results, population_cou
   for (i in seq_along(results)) {
     if((i-1L)%%128L==0L)poll_linkage_cancellation(cancelled)
     record <- results[[i]]
-    validate_row_result(context, mapping_id, record, kind)
+    validate_row_result(context, mapping_id, record, kind, context_validated = TRUE)
     contract_count(record$row_number, "row number")
     if (record$row_number < 1 || record$row_number > population_count) stop("Result row is outside the population")
     rows[[i]] <- record$row_number; labels[[i]] <- record[[field]]
@@ -265,14 +279,14 @@ summarise_row_contracts <- function(context, mapping_id, results, population_cou
 #' @param mapping_id Exact date or linkage mapping identifier.
 #' @param results Typed records for this context/mapping, including not_evaluated rows.
 #' @param population_count Exact number of source rows; zero is supported.
-#' @param cancelled Optional cooperative function for linkage summaries; NULL
+#' @param cancelled Optional cooperative function for row summaries; NULL
 #'   leaves existing summary behaviour unchanged.
 #' @return JSON-compatible mutually exclusive status counts. Missing or duplicate
 #'   rows and mixed source contexts are rejected instead of silently counted.
 #' @export
-summarise_date_results <- function(context, mapping_id, results, population_count) {
+summarise_date_results <- function(context, mapping_id, results, population_count, cancelled=NULL) {
   summarise_row_contracts(context, mapping_id, results, population_count, "date", "status",
-    unlist(context$validation_spec$rules$snapshot$date_statuses))
+    unlist(context$validation_spec$rules$snapshot$date_statuses), cancelled)
 }
 
 #' @rdname summarise_date_results

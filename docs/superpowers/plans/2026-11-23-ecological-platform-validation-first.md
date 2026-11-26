@@ -229,13 +229,26 @@ matching, date recognition or scientific result persistence is executed here.
 
 **Verification:** 928 assertions; installed-package Status: OK; synthetic outcomes and canonical OBIS comparison reproduced; originals/configurations/history unchanged. Quotas/cancellation, absent saved mappings, source races and independent resources covered. No scientific date recognition, new results tables or results UI in this slice. See ecoplatform-r/docs/verification/2026-11-25-linkage-engine.md. The user approved staging, commit and push of Step 2C on 25 November 2026.
 
-#### Task 2D: Lexical date patterns — future
+#### Task 2D: Lexical date patterns — implemented, publication approved
 
-**Files:** R/validation_temporal.R, versioned inst/rules/date-patterns-*.json and fixtures/tests.
+**Files:** R/validation_temporal.R, R/service_dates.R, versioned inst/rules/date-patterns-*.json, typed result/catalogue compatibility updates, tests, API help and tools/manual-dates.R.
 
-- [ ] Implement TMP-00–03/TMP-08 per confirmed field/group, with one classification per input row and mapping. A suggested field requires confirmation; a usable descriptor retains declaration provenance.
-- [ ] Recognise enabled numeric dates, partial dates, timestamps, explicit intervals and split numeric components. Preserve every structurally compatible candidate when date order is undocumented. Record endpoint patterns for intervals and missing components for incomplete groups.
-- [ ] Reconcile recognised/ambiguous/unrecognised/missing/incomplete/not-evaluated totals. 2020-02-30 is lexically recognised as YYYY-MM-DD, with no calendar-validity claim.
+- [x] Implement TMP-00–03/TMP-08 per confirmed field/group, with one classification per input row and mapping. A suggested field requires confirmation; a usable descriptor retains declaration provenance.
+- [x] Recognise enabled numeric dates, partial dates, timestamps, explicit intervals and split numeric components. Preserve every structurally compatible candidate when date order is undocumented. Record endpoint patterns for intervals and missing components for incomplete groups.
+- [x] Reconcile recognised/ambiguous/unrecognised/missing/incomplete/not-evaluated totals. 2020-02-30 is lexically recognised as YYYY-MM-DD, with no calendar-validity claim.
+
+**Implementation boundary:** Read-only date-evaluation-1.0/lexical-dates-1.0 services;
+SQLite stays v2. Existing 0.1 catalogue snapshots remain unchanged; 1.0 is explicitly
+selectable for new specifications. Full-table date execution is independent of
+linkage, with confirmed mapping/schema checks, a shared output budget, cooperative
+cancellation, resource integrity and lifecycle guards. No Task 2E UI/persistence.
+
+**Verification:** See ecoplatform-r/docs/verification/2026-11-26-lexical-dates.md
+for executed checks, the two-role synthetic demonstration, review corrections and
+remaining scientific limitations. Final suite: 1,051 assertions with zero failures,
+errors, warnings or skips; installed-package Status: OK. User authorised implementation/tests/docs on
+26 November 2026 and subsequently explicitly approved committing and pushing
+the implementation, tests and updated documentation on the same date.
 
 #### Task 2E: Persistence and Shiny results — future
 
@@ -317,7 +330,13 @@ AI assistance should not be required to run deterministic validation. Later phas
 
 ## First development increment
 
-The input/history foundation is delivered. Task 2A is published. Task 2B, the clarification workflow and ordinary ZIP support are implemented and approved for publication; later increments require separate authorisation. After separately authorised follow-on work, demonstrate upload -> declaration/mapping -> linkage/date recognition -> summary/details -> restart/retrieve. Independent date processing must survive linkage limitations. This increment does not claim full RF08–RF16 or a complete review-decision workflow.
+The input/history foundation and Tasks 2A–2C are published, including clarification
+and ordinary ZIP support. Task 2D is implemented and approved for publication.
+Task 2E (persisted runs and Shiny results) is next, followed by Task 2F
+integrated acceptance. After separately authorised follow-on work, demonstrate
+upload -> declaration/mapping -> linkage/date recognition -> summary/details ->
+restart/retrieve. Independent date processing survives linkage limitations.
+This increment does not claim full RF08–RF16 or a complete review-decision workflow.
 
 Before scheduling work, establish representative sizes, deployment/users and scientific policy owners. Use milestone gates rather than unsupported calendar estimates.
 

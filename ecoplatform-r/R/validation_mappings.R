@@ -120,11 +120,13 @@ validate_linkage_mapping <- function(mapping) {
 #' @param linkage_mappings List of descriptor linkage declarations.
 #' @param enabled_rules,enabled_patterns Character vectors of catalogue IDs;
 #'   NULL enables all defined entries. Empty vectors explicitly enable none.
+#' @param pattern_version Exact date catalogue version. The historical default
+#'   remains unchanged; use date-patterns-1.0 for the executable catalogue.
 #' @return Specification containing complete catalogue snapshots and SHA-256
 #'   hashes of canonical JSON. Does not execute any rules or infer any mappings.
 #' @export
 new_validation_spec <- function(date_mappings = list(), linkage_mappings = list(),
-  enabled_rules = NULL, enabled_patterns = NULL) {
+  enabled_rules = NULL, enabled_patterns = NULL, pattern_version = "date-patterns-0.1") {
   if (!is.list(date_mappings) || !is.list(linkage_mappings)) stop("Mappings must be lists")
   lapply(date_mappings, validate_date_mapping); lapply(linkage_mappings, validate_linkage_mapping)
   mappings <- c(date_mappings, linkage_mappings)
@@ -142,7 +144,7 @@ new_validation_spec <- function(date_mappings = list(), linkage_mappings = list(
       seen[[table$table_id]] <- table
     }
   }
-  rules <- validation_rules(); patterns <- date_patterns()
+  rules <- validation_rules(); patterns <- date_patterns(pattern_version)
   if (is.null(enabled_rules)) enabled_rules <- names(rules$rules)
   if (is.null(enabled_patterns)) enabled_patterns <- names(patterns$patterns)
   contract_texts(enabled_rules, "enabled rules", TRUE); contract_texts(enabled_patterns, "enabled patterns", TRUE)
@@ -155,7 +157,8 @@ new_validation_spec <- function(date_mappings = list(), linkage_mappings = list(
 
 validate_validation_spec <- function(spec, version_id = NULL, resource_ids = NULL) {
   rebuilt <- new_validation_spec(spec$date_mappings, spec$linkage_mappings,
-    as.character(unlist(spec$enabled_rules)), as.character(unlist(spec$enabled_patterns)))
+    as.character(unlist(spec$enabled_rules)), as.character(unlist(spec$enabled_patterns)),
+    pattern_version = spec$patterns$version)
   if (!contract_equal(spec, rebuilt)) stop("Validation catalogue snapshot/hash or contract mismatch")
   tables <- c(lapply(spec$date_mappings, function(x) x$table),
     unlist(lapply(spec$linkage_mappings, function(x) list(x$core$table, x$extension$table)), recursive = FALSE))

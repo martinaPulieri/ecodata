@@ -1,10 +1,10 @@
 # Ecological platform: local Shiny workspace
 
-This R package implements local input registration, immutable configuration revisions and SQLite processing history, with a first Shiny interface for uploading files, configuring lexical previews and inspecting history. Scientific validators are not included yet. See the [approved workspace structure](../README.md), [storage contracts](docs/architecture/step1-storage.md) and [Shiny manual checks](docs/user-guide/shiny-workspace.md).
+This R package implements local input registration, immutable configuration revisions and SQLite processing history, with a Shiny interface for uploading files, configuring lexical previews and inspecting history. R services also execute exact linkage checks and lexical date recognition; Shiny validation execution and saved results are planned for Task 2E. See the [approved workspace structure](../README.md), [storage contracts](docs/architecture/step1-storage.md) and [Shiny manual checks](docs/user-guide/shiny-workspace.md).
 
 New CSV/TSV uploads automatically detect supported encoding and separator when evidence is unambiguous. Detected settings and evidence are saved in revision 1. Manual controls remain available; **Detect format** redetects an already registered file into a new revision. Ambiguous legacy encodings and competing separator candidates are explicitly flagged for review. See [automatic detection](docs/user-guide/parser-detection.md).
 
-The next approved slice (Task 2A) supplies versioned validation definitions,
+The completed Task 2A supplies versioned validation definitions,
 source-scoped mapping declarations and typed result contracts, stored in immutable
 configuration snapshots. It executes no validation rules and adds no validation UI.
 See [contract architecture](docs/architecture/validation-contracts.md) and
@@ -24,7 +24,7 @@ and [schema v2 contracts](docs/architecture/workspace-lifecycle.md). Stop older
 app processes before opening an existing runtime with this version: it upgrades
 schema v1 automatically after making a verified backup.
 
-From this directory, run `Rscript --vanilla tools/launch-shiny.R`, then open http://127.0.0.1:8791. ECODATA_PORT can select a different free local port; ECODATA_RUNTIME_ROOT selects persistent local, non-synchronised storage. Each browser session owns its SQLite connection. The exported `run_app()` and launcher consistently configure the upload transport limit; scientific validation remains a later increment.
+From this directory, run `Rscript --vanilla tools/launch-shiny.R`, then open http://127.0.0.1:8791. ECODATA_PORT can select a different free local port; ECODATA_RUNTIME_ROOT selects persistent local, non-synchronised storage. Each browser session owns its SQLite connection. The exported `run_app()` and launcher consistently configure the upload transport limit; validation execution through Shiny remains Task 2E.
 
 ## Setup
 
@@ -135,3 +135,23 @@ The user approved publication of this implementation on 25 November 2026.
 Publication approval (25 November 2026): the user approved Step 2C code, tests,
 updated plan and documentation for commit/push to martinaPulieri/ecodata.
 Verified suite: 928 assertions with zero failures/errors/warnings/skips; installed-package Status: OK.
+
+## Task 2D: lexical date recognition
+
+`run_date_validation()` recognises the enabled numeric date, partial-date,
+timestamp, interval and named split-component formats independently per mapping.
+It preserves original text, undocumented day/month ambiguity, observed widths,
+descriptor/user provenance and pinned catalogues. Summaries reconcile all six
+statuses; calendar validity and value conversion are outside this increment.
+
+Existing catalogue snapshots remain unchanged. `date-patterns-1.0` is available
+through the optional `pattern_version` argument to `new_validation_spec()`;
+historical 0.1 configurations remain executable with their original hashes.
+
+See [architecture](docs/architecture/lexical-dates.md),
+[manual guide](docs/user-guide/lexical-dates.md) and
+[verification](docs/verification/2026-11-26-lexical-dates.md).
+Run `Rscript --vanilla tools/manual-dates.R` for a synthetic demonstration.
+Results persistence and the Shiny validation/results interface remain Task 2E.
+The user approved committing and pushing the implementation, tests and updated
+documentation on 26 November 2026.

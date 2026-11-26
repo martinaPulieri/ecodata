@@ -5,7 +5,13 @@
 \alias{summarise_linkage_results}
 \title{Reconcile one result per source row for one mapping}
 \usage{
-summarise_date_results(context, mapping_id, results, population_count)
+summarise_date_results(
+  context,
+  mapping_id,
+  results,
+  population_count,
+  cancelled = NULL
+)
 
 summarise_linkage_results(
   context,
@@ -24,7 +30,7 @@ summarise_linkage_results(
 
 \item{population_count}{Exact number of source rows; zero is supported.}
 
-\item{cancelled}{Optional cooperative function for linkage summaries; NULL
+\item{cancelled}{Optional cooperative function for row summaries; NULL
 leaves existing summary behaviour unchanged.}
 }
 \value{

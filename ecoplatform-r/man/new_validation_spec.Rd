@@ -8,7 +8,8 @@ new_validation_spec(
   date_mappings = list(),
   linkage_mappings = list(),
   enabled_rules = NULL,
-  enabled_patterns = NULL
+  enabled_patterns = NULL,
+  pattern_version = "date-patterns-0.1"
 )
 }
 \arguments{
@@ -18,6 +19,9 @@ new_validation_spec(
 
 \item{enabled_rules, enabled_patterns}{Character vectors of catalogue IDs;
 NULL enables all defined entries. Empty vectors explicitly enable none.}
+
+\item{pattern_version}{Exact date catalogue version. The historical default
+remains unchanged; use date-patterns-1.0 for the executable catalogue.}
 }
 \value{
 Specification containing complete catalogue snapshots and SHA-256

@@ -16,6 +16,6 @@ date_patterns(version = "date-patterns-0.1")
 Plain JSON-compatible list, independent of Shiny and SQLite.
 }
 \description{
-These catalogues describe future checks and patterns; they execute none.
+These catalogues describe checks and patterns; reading them executes none.
 Existing versions are retained when a new catalogue is introduced.
 }

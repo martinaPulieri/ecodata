@@ -119,6 +119,7 @@ date_prerequisites <- function(input) {
   output<-list();suggestions<-list();saved<-input$configuration$validation_spec$date_mappings
   for(table in input$tables) {
     mappings<-Filter(function(m)identical(m$table$table_id,table$table_id),saved)
+    usable_mappings<-list()
     if(length(mappings)) {
       for(mapping in mappings) {
         issue<-prepared_schema_issue(table,mapping$table)
@@ -128,12 +129,14 @@ date_prerequisites <- function(input) {
           if(!mapping$date_role%in%c("eventDate","http://rs.tdwg.org/dwc/terms/eventDate","https://rs.tdwg.org/dwc/terms/eventDate"))issue<-"Saved descriptor date role disagrees with the eventDate declaration"
           if(!nzchar(issue)&&(length(mapping$columns)!=1L||sum(positions==mapping$columns$value$position)!=1L))issue<-"Saved descriptor date mapping is not supported by the actual field declaration"
         }
+        if(!nzchar(issue))usable_mappings[[length(usable_mappings)+1L]]<-mapping
         output[[length(output)+1L]]<-prerequisite_record("TMP-00","date",if(nzchar(issue))"not_evaluated" else "ready",
           if(nzchar(issue))issue else "Confirmed date mapping matches actual headers/positions; recognition not executed",table,mapping)
       }
     }
-    # Explicit mappings override only the positions they actually cover.
-    covered<-unlist(lapply(mappings,function(m)lapply(m$columns,function(c)c$position)),use.names=FALSE)
+    # Only usable confirmed mappings supersede a descriptor. Suggestions and
+    # stale declarations cannot disable independently usable source evidence.
+    covered<-unlist(lapply(usable_mappings,function(m)lapply(m$columns,function(c)c$position)),use.names=FALSE)
     fields<-Filter(function(f)is_event_date_term(f$term)&&(is.null(f$position)||!f$position%in%covered),table$declaration$fields)
     positions<-vapply(fields,function(f)if(is.null(f$position))NA_real_ else f$position,numeric(1))
     duplicate_positions<-positions[duplicated(positions)&!is.na(positions)]
@@ -150,7 +153,8 @@ date_prerequisites <- function(input) {
       }
     }
     # An answer covers its own fields, never all other dates in the table.
-    assigned<-c(covered,positions[!is.na(positions)])
+    assigned<-c(unlist(lapply(mappings,function(m)lapply(m$columns,function(c)c$position)),use.names=FALSE),
+      positions[!is.na(positions)])
     candidates<-Filter(function(m) {
       proposed<-vapply(m$columns,function(c)c$position,numeric(1))
       !any(proposed%in%assigned)

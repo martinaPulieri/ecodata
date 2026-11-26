@@ -1,6 +1,6 @@
 #' Read pinned validation definitions
 #'
-#' These catalogues describe future checks and patterns; they execute none.
+#' These catalogues describe checks and patterns; reading them executes none.
 #' Existing versions are retained when a new catalogue is introduced.
 #' @param version Exact installed catalogue version. Unknown versions fail closed.
 #' @return Plain JSON-compatible list, independent of Shiny and SQLite.
@@ -12,7 +12,7 @@ validation_rules <- function(version = "linkage-dates-1.0") {
 #' @rdname validation_rules
 #' @export
 date_patterns <- function(version = "date-patterns-0.1") {
-  read_validation_catalogue(version, "date-patterns-0.1")
+  read_validation_catalogue(version, c("date-patterns-0.1", "date-patterns-1.0"))
 }
 
 read_validation_catalogue <- function(version, supported) {
