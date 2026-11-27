@@ -4,7 +4,7 @@
 \alias{migrate_repository}
 \title{Apply an atomic repository schema migration}
 \usage{
-migrate_repository(con, statements = NULL, target_version = 2L)
+migrate_repository(con, statements = NULL, target_version = 3L)
 }
 \arguments{
 \item{con}{Open SQLite connection.}
@@ -18,7 +18,7 @@ a controlled future migration. Not intended for end-user SQL execution.}
 Current schema version, invisibly.
 }
 \description{
-Default use initialises schema v2 or upgrades an existing v1 atomically. Future
+Default use initialises schema v3 or upgrades an existing v1/v2 atomically. Future
 explicit upgrades back up the committed database before changing it. Schema
 checks, SQL changes and user_version updates share one write reservation.
 }

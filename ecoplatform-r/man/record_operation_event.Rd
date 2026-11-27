@@ -25,4 +25,6 @@ Allowed transitions are queued to running/cancelled/failed/interrupted, then
 running to completed/completed_with_limitations/failed/interrupted/cancelled.
 Terminal operations cannot restart; a rerun requires a new request. This API
 is a trusted-worker audit API and does not certify scientific correctness.
+Managed validation operations must use the owning validation worker service;
+the generic audit API cannot advance their lifecycle.
 }

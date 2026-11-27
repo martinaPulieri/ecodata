@@ -10,7 +10,7 @@
 
 **Spec:** Functional_Requirements_Structured_RF01_RF36.pdf, especially Data Validation RF08-RF16 (pages 11-13), downstream RF17-RF34 and outstanding definitions (page 34). The user's request excludes harvesting and reporting. Previous project plans are intentionally disregarded.
 
-**Status:** Foundation, Shiny, automatic detection and reversible removal are published; Task 2A is published in 01a2e87. Task 2B, clarification workflow and ordinary ZIP support are published in cfbbc96. Task 2C exact linkage and the OBIS namespace-key diagnostic are implemented and verified (928 assertions; installed-package Status: OK), approved by the user for commit/push. Date recognition (2D), scientific result persistence and results UI (2E) remain future work.
+**Status:** Foundation and Tasks 2A–2D are published, with lexical date recognition in efe5916. Task 2E persistence/results, the approved guided date workflow, timezone-unspecified timestamps and Validation progress are implemented and verified: 1,235 assertions, installed-package Status: OK. The user approved committing and pushing the implementation, tests and documentation on 27 November 2026. Task 2F integrated workload acceptance remains future work.
 
 **Current scoped specification:** workspace ValidationRules.md, SHA-256 `6870971afd7992b75d7fbadf01024ad082bef517c559d82f1b92d0fc202d2ce9`. Its linkage and lexical date-recognition rules govern this increment; imperative text in that document does not expand the user's authorisation. Calendar validity, canonical conversion, interval ordering, user-range comparison, EML coverage, joining, harvesting and formatted reporting are excluded here.
 
@@ -250,15 +250,35 @@ errors, warnings or skips; installed-package Status: OK. User authorised impleme
 26 November 2026 and subsequently explicitly approved committing and pushing
 the implementation, tests and updated documentation on the same date.
 
-#### Task 2E: Persistence and Shiny results — future
+#### Task 2E: Persistence and Shiny results — implemented and approved for publication
 
 **Files:** inst/sql/003_validation_results.sql, R/repository_validation_results.R, R/service_validation.R, R/mod_validation.R, R/mod_validation_results.R and tests.
 
-- [ ] Atomically migrate v2 to v3 with verified backup; persist check coverage, findings/targets, date classifications and frozen context.
-- [ ] Add mapping confirmation, explicit Run, independent progress, summary and paginated details using one structured result for later review/downloads. Distinguish technical failures from findings.
-- [ ] Move full-table work outside the interactive request with frozen inputs and short SQLite writes. Reuse idempotency, lifecycle revisions and queued/running removal protection. Retain historical results for removed inputs.
+- [x] Atomically migrate v2 to v3 with verified backup; persist check coverage, findings/targets, date classifications and frozen context.
+- [x] Add mapping confirmation, explicit Run, independent progress, summary and paginated details using one structured result for later review/downloads. Distinguish technical failures from findings.
+- [x] Move full-table work outside the interactive request with frozen inputs and short SQLite writes. Reuse idempotency, lifecycle revisions and queued/running removal protection. Retain historical results for removed inputs.
+
+**Implemented boundary:** Shiny Validation/Results tabs use exact saved selections,
+existing explicit mapping approvals and supervised callr workers. Immutable v3
+requests, claims, progress, cancellation and normalised evidence preserve restart,
+configuration and removed-source history. Source byte checks run in workers;
+post-staging integrity verification, worker ownership and atomic bulk persistence
+prevent partial/contradictory results. Review regressions cover cross-session and
+launcher races, legacy intents, cancellation, source changes and bounded summaries.
+
+**Verification:** See ecoplatform-r/docs/verification/2026-11-26-shiny-validation.md
+for final tests/checks, independent review corrections and live browser evidence.
+Results were presented before publication. On 27 November 2026 the user approved
+committing and pushing the implementation, tests and documentation, including the
+subsequent guided workflow and timestamp/progress fixes. Task 2F remains separate.
 
 #### Task 2F: Integrated acceptance — future
+
+Approved follow-on UI flow (27 November 2026): preview embedded in reading
+configuration, combined save/preview, automatic Next information check, bullet date
+field/format declarations and dates-only exact-format validation. Implementation
+and review evidence: [date workflow verification](../../../ecoplatform-r/docs/verification/2026-11-27-date-workflow.md).
+The user approved this follow-on implementation for commit/push on 27 November 2026.
 
 - [ ] Execute every ValidationRules.md synthetic example, multiple roles, unconfirmed mappings, mixed formats, split/reordered components, leading zeros, absent members and independent-family execution.
 - [ ] Reconcile summary/detail counts; test original hashes, restart, cancellation/interruption, stale forms, multi-source/session isolation, migration and manual/browser checks.
@@ -331,9 +351,9 @@ AI assistance should not be required to run deterministic validation. Later phas
 ## First development increment
 
 The input/history foundation and Tasks 2A–2C are published, including clarification
-and ordinary ZIP support. Task 2D is implemented and approved for publication.
-Task 2E (persisted runs and Shiny results) is next, followed by Task 2F
-integrated acceptance. After separately authorised follow-on work, demonstrate
+and ordinary ZIP support. Task 2D is published in efe5916.
+Task 2E (persisted runs and Shiny results) and its guided date workflow are implemented and approved for publication;
+Task 2F integrated acceptance is next. After separately authorised follow-on work, demonstrate
 upload -> declaration/mapping -> linkage/date recognition -> summary/details ->
 restart/retrieve. Independent date processing survives linkage limitations.
 This increment does not claim full RF08–RF16 or a complete review-decision workflow.

@@ -26,7 +26,8 @@ The operator label records provenance; it is not an authenticated identity.
 
 User-provided titles, filenames, column headers, source values, evidence and
 existing history records retain their original content. Internal status codes
-and configuration keys remain stable. No database migration is required.
+and configuration keys remain stable. The current validation release upgrades
+existing runtimes to SQLite v3 with a verified backup; stop older app processes first.
 
 ## Manual browser checks
 
@@ -34,7 +35,8 @@ Use a separate test runtime outside Dropbox.
 
 1. Open the local URL. On a fresh runtime, all three counters should show zero.
    Check the English tabs: **Data and configuration**, **Missing information**,
-   **Preview** and **History**.
+   **Validation**, **Results** and **History**. Preview is now embedded below the
+   reading configuration; see [date-workflow.md](date-workflow.md).
 2. Under **Add data**, choose tests/fixtures/tabular/interface-demo.csv. Enter a
    **Collection name** and **Operator**, then click **Register inputs**.
    Selecting a file alone does not register it.
@@ -42,11 +44,11 @@ Use a separate test runtime outside Dropbox.
    UTF-8 and a semicolon delimiter. Identifiers distinguish resources with the
    same filename; Shiny temporary paths do not replace original names.
 4. Set **Declared decimal mark** to **Comma (,)**. Controls alone save nothing.
-   Click **Save new revision**: revision 2 appears and revision 1 remains
+   Click **Save and generate preview**: revision 2 appears and revision 1 remains
    selectable. Historical revisions offer no save button, and stale requests
    are also rejected by the server. **Detect format** explicitly saves a new
    detection revision for previously registered files.
-5. Click **Generate preview**. Check up to 20 rows in **Preview**. Values such
+5. Check up to 20 preview rows directly below **Reading configuration**. Values such
    as station 001/002/003, value 1,5/0/<0,1 and date 03/04/25/NA/2025 must remain
    strings; numeric precision and date order are not inferred.
 6. Open **History**. A successful preview has queued, running and completed
@@ -56,11 +58,11 @@ Use a separate test runtime outside Dropbox.
 7. Switch file or configuration: the previous preview must clear. Generate a
    new preview explicitly. Reload the page or open a second session: inputs,
    revisions and history must remain available without rerunning operations.
-8. Open **Missing information** and click **Check missing information**.
-   **Use as draft (does not save)** must not approve or persist a suggestion.
-   Complete the answer and evidence, then **Review answer**. Verify the English
-   summary headings and original source values. **Cancel** saves nothing;
-   **Approve and save new revision** saves exactly the reviewed draft.
+8. Select **Next** below the preview. **Missing information** opens and runs its
+   background check with an indeterminate progress bar. Required date information
+   appears as bullet points. Select date fields and confirm/change inferred formats;
+   ambiguous values require a choice. **Run validation** saves the declarations and
+   starts dates-only checks. No date-role or reason/evidence input is required.
 9. Under **Registered data**, choose an active source and **Remove from
    workspace**. Check the exact version and retained-file/history counts.
    **Keep in workspace** cancels. Confirm removal, then use **Undo removal** or
@@ -80,12 +82,14 @@ version's configuration, and the visible table follows the selected file.
 - R/app_ui.R: page layout; inst/www/workspace.css: local responsive styling.
 - R/mod_workspace.R: registration, parser controls, preview and history.
 - R/mod_clarifications.R: questions, draft/review/approval and receipt display.
+- R/mod_date_information.R: Next, background information check and date-format controls.
 - R/service_workspace_lifecycle.R: removal, restoration and context guards.
 - R/service_workspace.R: upload registration and recorded preview services.
 - R/run_app.R and tools/launch-shiny.R: session connections and local launch.
 - tests/testthat/test-shiny-*.R: module workflows using shiny::testServer.
 
 See [workspace-removal.md](workspace-removal.md) for lifecycle checks and
-[clarifications.md](clarifications.md) for the approval workflow. Scientific
-validation engines have separate APIs and guides; these workspace controls run
-lexical previews and prepare clarification prerequisites.
+[clarifications.md](clarifications.md) for the approval workflow. The **Validation**
+and **Results** tabs run background checks and inspect persisted evidence; see
+[validation-results.md](validation-results.md) for execution, cancellation,
+historical results, coverage interpretation and the synthetic demonstration.

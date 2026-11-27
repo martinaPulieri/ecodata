@@ -7,7 +7,7 @@ test_that("concurrent first opens initialise exactly one valid schema", {
       DBI::dbGetQuery(repo$con, "PRAGMA user_version")[[1]]
     }, error = conditionMessage)
   }, list(root, root))
-  expect_equal(results, list(2L, 2L))
+  expect_equal(results, list(3L, 3L))
 })
 
 test_that("concurrent migrations recheck version under the writer reservation", {
@@ -17,11 +17,11 @@ test_that("concurrent migrations recheck version under the writer reservation", 
     tryCatch({
       repo <- get("migration_repo", envir = .GlobalEnv)
       on.exit(close_repository(repo))
-      migrate_repository(repo$con, statements = "CREATE TABLE migration_once (id INTEGER)", target_version = 3L)
+      migrate_repository(repo$con, statements = "CREATE TABLE migration_once (id INTEGER)", target_version = 4L)
     }, error = conditionMessage)
   }, list(root, root), open_root = root)
-  expect_equal(results, list(3L, 3L))
-  expect_equal(DBI::dbGetQuery(repo$con, "PRAGMA user_version")[[1]], 3L)
+  expect_equal(results, list(4L, 4L))
+  expect_equal(DBI::dbGetQuery(repo$con, "PRAGMA user_version")[[1]], 4L)
   expect_true(DBI::dbExistsTable(repo$con, "migration_once"))
 })
 

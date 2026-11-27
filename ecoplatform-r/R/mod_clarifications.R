@@ -29,7 +29,7 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
     latest<-utils::tail(list_configurations(repo,ctx$version_id)$config_id,1)
     editable<-ctx$workspace_state=="active"&&ctx$config$config_id==latest
     questions<-if(is.null(local$request))list() else
-      Filter(function(q)q$resource_id==ctx$resource_id,local$request$questions)
+      Filter(function(q)q$resource_id==ctx$resource_id&&q$type!="date_mapping",local$request$questions)
     shiny::tagList(
       shiny::h2("Information to clarify"),
       shiny::p("Different datasets may require different information. Each question explains which checks depend on the answer."),
@@ -40,15 +40,15 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
       if(!is.null(local$request)&&!length(questions))shiny::p("No clarification is required for this file in the selected configuration."),
       if(length(questions))shiny::tagList(
         shiny::p(paste(length(questions),"questions for the selected file. A linkage issue does not block independent date checks.")),
-        shiny::selectInput(ns("clarify_question"),"Required information",choices=stats::setNames(
-          vapply(questions,function(q)q$question_id,character(1)),
-          vapply(seq_along(questions),function(i)paste(i,clarification_label(questions[[i]]$type),questions[[i]]$member),character(1))))),
+        shiny::tags$ul(lapply(questions,function(q)shiny::tags$li(
+          validation_bound_button(ns,"clarify_question",paste(clarification_label(q$type),q$member),q$question_id,FALSE,"btn-outline-secondary"))))),
       shiny::uiOutput(ns("clarification_form")),
       shiny::h3("Approved answers in the selected revision"),
       shiny::div(class="table-scroll",shiny::tableOutput(ns("clarification_history"))))
   })
   output$clarification_form <- shiny::renderUI({
     q<-current_question()
+    if(q$type=="date_mapping")return(NULL)
     ctx<-current_context()
     if(ctx$workspace_state!="active")return(NULL)
     table<-find_prepared_table(local$request$preparation,q$table_id)
@@ -96,7 +96,6 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
         shiny::p(clarification_suggestion_text(q)),
         shiny::actionButton(ns("clarify_suggest"),"Use as draft (does not save)")),
       fields,
-      shiny::textAreaInput(ns("clarify_evidence"),"Reason / evidence for the answer (required)",rows=2),
       shiny::actionButton(ns("clarify_review"),"Review answer",class="btn-primary"))
   })
   output$archive_linkage_columns<-shiny::renderUI({
@@ -163,8 +162,10 @@ workspace_clarifications <- function(input,output,session,repo,current_context,
       linkage_mapping=list(core_position=position(input$clarify_core),extension_position=position(input$clarify_reference)),
       source_repair=list(note=input$clarify_note))
     local$draft<-NULL
+    evidence<-input$clarify_evidence
+    if(is.null(evidence)||!nzchar(evidence))evidence<-"Settings explicitly selected and approved in Missing information"
     local$draft<-preview_clarification_answer(repo,local$request,q$question_id,
-      answer,input$clarify_evidence,input$actor)
+      answer,evidence,input$actor)
     shiny::showModal(shiny::modalDialog(title="Approve this answer",
       shiny::p("Review the values: they will be saved in a new revision. Closing or cancelling applies nothing."),
       shiny::tags$pre(clarification_review_text(local$draft)),

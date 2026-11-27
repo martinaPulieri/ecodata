@@ -17,7 +17,7 @@ test_that("Shiny registration, explicit saves and inspection use the selected co
     newcid <- utils::tail(list_configurations(repo, vid)$config_id, 1)
     session$setInputs(config = newcid)
     ctx <- current_context()
-    session$setInputs(form_context = ctx$token, inspect = 1)
+    session$setInputs(form_context = ctx$token)
     expect_equal(state$inspection$config_id, newcid)
     expect_identical(state$inspection$resources[[1]]$tables[[1]]$preview[[1]], "001")
     expect_match(output$preview_table, "001")

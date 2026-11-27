@@ -12,7 +12,7 @@ validation_rules <- function(version = "linkage-dates-1.0") {
 #' @rdname validation_rules
 #' @export
 date_patterns <- function(version = "date-patterns-0.1") {
-  read_validation_catalogue(version, c("date-patterns-0.1", "date-patterns-1.0"))
+  read_validation_catalogue(version, c("date-patterns-0.1", "date-patterns-1.0", "date-patterns-1.1"))
 }
 
 read_validation_catalogue <- function(version, supported) {

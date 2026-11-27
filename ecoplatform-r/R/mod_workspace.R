@@ -77,10 +77,16 @@ workspace_server <- function(id, repo) {
       ctx
     }
     shiny::observeEvent(list(input$version, input$resource, input$config), {
+      preview <- state$preview_context
+      if(!is.null(preview)&&identical(input$version,preview$version)&&
+         identical(input$resource,preview$resource)&&identical(input$config,preview$config))return()
       state$inspection <- NULL
       state$inspection_operation <- NULL
     }, ignoreNULL = FALSE)
     shiny::observeEvent(lifecycle$selected(), {
+      selected<-lifecycle$selected()
+      if(nrow(selected)==1L&&identical(selected$workspace_state,"active")&&
+         !is.null(state$preview_context)&&identical(selected$version_id,state$preview_context$version))return()
       state$inspection <- NULL
       state$inspection_operation <- NULL
     }, ignoreInit = TRUE)
@@ -93,6 +99,7 @@ workspace_server <- function(id, repo) {
       state$registered_upload <- signature
       state$preferred_version <- result$version_id
       state$source_tick <- state$source_tick + 1L
+      shiny::updateTabsetPanel(session,"view",selected="config")
       tell("Inputs registered. Original files are preserved; you can configure how they are read.")
     }))
     shiny::observeEvent(input$refresh, {
@@ -113,16 +120,28 @@ workspace_server <- function(id, repo) {
       ctx <- check_form()
       revisions <- list_configurations(repo, ctx$version_id)
       if (ctx$config$config_id != utils::tail(revisions$config_id, 1)) stop("The selected revision is historical: select the latest revision before saving.")
-      if (tolower(tools::file_ext(ctx$resource$original_name)) == "zip") stop("Archives use the original descriptor")
       parsers <- ctx$config$parsers
-      parsers[[ctx$resource_id]] <- list(delimiter = input$delimiter, encoding = input$encoding,
+      archive<-tolower(tools::file_ext(ctx$resource$original_name))=="zip"
+      if(!archive)parsers[[ctx$resource_id]] <- list(delimiter = input$delimiter, encoding = input$encoding,
         decimal_mark = input$decimal_mark, quote = input$quote)
+      receipts<-clarification_receipts(ctx$config)
+      if(!archive)receipts<-c(receipts,list(list(contract_version="clarification-answer-1.0",
+        question_id=new_id(repo,"reading_confirmation"),question_key=paste("parser",ctx$resource_id,"settings",sep=":"),
+        type="parser",version_id=ctx$version_id,base_config_id=ctx$config$config_id,resource_id=ctx$resource_id,
+        source_sha256=ctx$resource$sha256,answer=parsers[[ctx$resource_id]],applied_value=parsers[[ctx$resource_id]],
+        approved=TRUE,actor_id=input$actor,evidence="Reading settings confirmed with Save and generate preview",approved_at=utc_now())))
+      state$inspection<-NULL;state$inspection_operation<-NULL
       saved <- save_configuration(repo, ctx$version_id, parsers = parsers, metadata = ctx$config$metadata,
         schema = ctx$config$schema, parser_detection = if (is.null(ctx$config$parser_detection)) list() else ctx$config$parser_detection,
-        expected_revision = ctx$config$revision, actor_id = input$actor, expected_workspace_revision = ctx$workspace_revision)
+        expected_revision = ctx$config$revision, actor_id = input$actor, expected_workspace_revision = ctx$workspace_revision,
+        clarifications=receipts)
+      state$preview_context<-list(version=ctx$version_id,resource=ctx$resource_id,config=saved$config_id)
       refresh_configs(ctx$version_id, saved$config_id)
       state$source_tick <- state$source_tick + 1L
-      tell(paste("Revision", saved$revision, "saved. The previous revision remains available."))
+      on.exit({state$history_tick<-state$history_tick+1L},add=TRUE)
+      result<-run_workspace_inspection(repo,ctx$version_id,saved$config_id,input$actor,ctx$workspace_revision)
+      state$inspection<-result$inspection;state$inspection_operation<-result$operation_id
+      tell(paste("Revision", saved$revision, "saved and preview generated. Review the preview, then select Next."))
     }))
     shiny::observeEvent(input$detect, attempt(function() {
       ctx <- check_form()
@@ -140,7 +159,8 @@ workspace_server <- function(id, repo) {
       result <- run_workspace_inspection(repo, ctx$version_id, ctx$config$config_id, input$actor, ctx$workspace_revision)
       state$inspection <- result$inspection
       state$inspection_operation <- result$operation_id
-      shiny::updateTabsetPanel(session, "view", selected = "preview")
+      state$preview_context<-list(version=ctx$version_id,resource=ctx$resource_id,config=ctx$config$config_id)
+      shiny::updateTabsetPanel(session, "view", selected = "config")
       tell("Preview generated and recorded in history. No scientific checks were run.")
     }))
     output$notice <- shiny::renderUI({
@@ -200,9 +220,9 @@ workspace_server <- function(id, repo) {
         if (historical) shiny::div(class = "alert alert-info", "You are viewing a historical revision. Changes cannot be saved from this view."),
         if (!is.null(detection) && !archive) detection_notice(detection, p),
         fields, shiny::p(class = "field-help", "Settings describe how the file is read. Numbers and dates remain text in the preview."),
-        shiny::div(class = "action-row", if (!historical && !archive) shiny::actionButton(ns("save"), "Save new revision", icon = shiny::icon("floppy-disk"), class = "btn-primary"),
+        shiny::div(class = "action-row", if (!historical) shiny::actionButton(ns("save"), "Save and generate preview", icon = shiny::icon("floppy-disk"), class = "btn-primary"),
           if (!historical && tabular) shiny::actionButton(ns("detect"), "Detect format", icon = shiny::icon("wand-magic-sparkles"), class = "btn-outline-secondary"),
-          shiny::actionButton(ns("inspect"), "Generate preview", icon = shiny::icon("table"), class = "btn-outline-secondary")))
+          if(historical)shiny::actionButton(ns("inspect"), "Preview saved revision", icon = shiny::icon("table"), class = "btn-outline-secondary")))
     })
     selected_preview <- shiny::reactive({
       shiny::req(state$inspection, input$resource)
@@ -211,7 +231,7 @@ workspace_server <- function(id, repo) {
       matches[[1]]
     })
     output$preview_summary <- shiny::renderUI({
-      if (is.null(state$inspection)) return(workspace_empty("A preview with its context", "Select a revision and click Generate preview in the Data and configuration tab."))
+      if (is.null(state$inspection)) return(workspace_empty("Preview", "Save the reading configuration to display a preview here."))
       x <- selected_preview()
       cfg <- get_configuration(repo, state$inspection$config_id)
       shiny::tagList(shiny::h2("Data as read"), shiny::span(class = "pill", paste("Revision", cfg$revision)),
@@ -241,8 +261,8 @@ workspace_server <- function(id, repo) {
     output$history_table <- shiny::renderTable({
       state$history_tick
       rows <- lifecycle$operations()
-      if (!nrow(rows)) return(data.frame(Information = "No preview has been generated yet."))
-      data.frame(Date = rev(rows$created_at), Activity = "Preview", Status = rev(rows$status), check.names = FALSE)
+      if (!nrow(rows)) return(data.frame(Information = "No preview or validation has been generated yet."))
+      data.frame(Date = rev(rows$created_at), Activity = ifelse(rev(rows$operation_type)=="validation","Validation","Preview"), Status = rev(rows$status), check.names = FALSE)
     }, striped = TRUE, rownames = FALSE)
     output$operation_summary <- shiny::renderUI({
       shiny::req(input$operation)
@@ -260,7 +280,10 @@ workspace_server <- function(id, repo) {
     shiny::outputOptions(output,"parser_form",suspendWhenHidden=FALSE)
     clarification <- workspace_clarifications(input,output,session,repo,current_context,
       check_form,state,refresh_configs,tell,attempt)
-    list(context = current_context, inspection = shiny::reactive(state$inspection))
+    validation <- workspace_validation(input,output,session,repo,current_context,state,tell,attempt)
+    date_information <- workspace_date_information(input,output,session,repo,current_context,
+      check_form,state,refresh_configs,tell,attempt)
+    list(context = current_context, inspection = shiny::reactive(state$inspection),validation=validation)
   })
 }
 

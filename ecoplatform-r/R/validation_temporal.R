@@ -15,7 +15,8 @@ date_pattern_match <- function(values, pattern) {
       collapse = pattern$separator), value))
   }
   if (kind == "partial") return(full(if (pattern$format == "YYYY") "[0-9]{4}" else "[0-9]{4}-[0-9]{2}", value))
-  if (kind == "timestamp") return(full("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z", value))
+  if (kind == "timestamp") return(full(paste0("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}",
+    if(identical(pattern$timezone,"unspecified"))"" else "Z"),value))
   if (kind == "interval") return(full("[0-9]{4}-[0-9]{2}-[0-9]{2}/[0-9]{4}-[0-9]{2}-[0-9]{2}", value))
   stop("Unsupported date pattern kind")
 }
@@ -26,6 +27,7 @@ classify_date_values <- function(values, mapping, spec) {
   split <- length(values) == 3L
   if (split && any(blanks)) return(list(status = "incomplete", candidates = character()))
   candidates <- Filter(function(id) {
+    if (!is.null(mapping$declared_pattern) && id != mapping$declared_pattern) return(FALSE)
     pattern <- spec$patterns$snapshot$patterns[[id]]
     if (identical(pattern$kind, "split") != split) return(FALSE)
     # Recorded order disambiguates year-last expressions only. A structurally
@@ -132,6 +134,11 @@ evaluate_date_preparation <- function(input, mapping_id = NULL, cancelled = func
   if (!identical(input$contract_version, "validation-preparation-1.0")) stop("Unsupported validation preparation")
   prerequisites <- assess_validation_prerequisites(input)
   selected <- prerequisites$dates
+  # A guided declaration explicitly selects its fields. Other descriptor/suggested
+  # dates remain in preparation, but are not silently added to this assessment.
+  scope<-input$configuration$metadata$date_format_selection
+  if(is.null(mapping_id)&&!is.null(scope))selected<-Filter(function(p)
+    !is.null(p$mapping)&&p$mapping$mapping_id%in%unlist(scope$mapping_ids),selected)
   if (!is.null(mapping_id)) {
     scalar_text(mapping_id, "mapping_id")
     selected <- Filter(function(p) !is.null(p$mapping) && identical(p$mapping$mapping_id, mapping_id), selected)
@@ -155,7 +162,7 @@ evaluate_date_preparation <- function(input, mapping_id = NULL, cancelled = func
     mappings[[i]] <- evaluate_date_mapping(input, p, remaining, cancelled)
     remaining$max_output_rows <- remaining$max_output_rows - length(mappings[[i]]$rows)
   }
-  finish_date_evaluation(list(contract_version = "date-evaluation-1.0", engine_version = "lexical-dates-1.0",
+  finish_date_evaluation(list(contract_version = "date-evaluation-1.0", engine_version = "lexical-dates-1.1",
     calendar_validation = FALSE, value_conversion = FALSE, version_id = input$version_id,
     config_id = input$config_id, config_hash = input$config_hash, requested_mapping_id = mapping_id,
     rules_source = if (is.null(input$configuration$validation_spec)) "application_defaults" else "configuration",

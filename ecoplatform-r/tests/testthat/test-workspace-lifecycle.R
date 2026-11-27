@@ -112,7 +112,7 @@ test_that("registered v1 upgrade preserves data and keeps a verified v1 backup",
   DBI::dbDisconnect(con)
   repo <- open_repository(root)
   withr::defer(close_repository(repo))
-  expect_equal(DBI::dbGetQuery(repo$con, "PRAGMA user_version")[[1]], 2L)
+  expect_equal(DBI::dbGetQuery(repo$con, "PRAGMA user_version")[[1]], 3L)
   expect_equal(list_workspace_inputs(repo)$version_id, "legacy-version")
   backup <- list.files(file.path(root, "backups"), "[.]sqlite$", full.names = TRUE)
   expect_length(backup, 1L)

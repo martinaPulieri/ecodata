@@ -1,0 +1,137 @@
+{
+  "catalogue_version": "date-patterns-1.1",
+  "provisional": true,
+  "implementation_status": "lexical-dates-1.1",
+  "calendar_validation": false,
+  "value_conversion": false,
+  "patterns": {
+    "ymd-dash": {
+      "kind": "single",
+      "format": "YYYY-MM-DD",
+      "order": "YMD",
+      "widths": {
+        "year": 4,
+        "month": 2,
+        "day": 2
+      },
+      "separator": "-",
+      "example": "2020-03-15"
+    },
+    "dmy-slash": {
+      "kind": "single",
+      "format": "DD/MM/YYYY",
+      "order": "DMY",
+      "widths": {
+        "year": 4,
+        "month": 2,
+        "day": 2
+      },
+      "separator": "/",
+      "example": "03/04/2020"
+    },
+    "mdy-slash": {
+      "kind": "single",
+      "format": "MM/DD/YYYY",
+      "order": "MDY",
+      "widths": {
+        "year": 4,
+        "month": 2,
+        "day": 2
+      },
+      "separator": "/",
+      "example": "03/04/2020"
+    },
+    "dmy-dash": {
+      "kind": "single",
+      "format": "DD-MM-YYYY",
+      "order": "DMY",
+      "widths": {
+        "year": 4,
+        "month": 2,
+        "day": 2
+      },
+      "separator": "-",
+      "example": "03-04-2020"
+    },
+    "mdy-dash": {
+      "kind": "single",
+      "format": "MM-DD-YYYY",
+      "order": "MDY",
+      "widths": {
+        "year": 4,
+        "month": 2,
+        "day": 2
+      },
+      "separator": "-",
+      "example": "03-04-2020"
+    },
+    "year": {
+      "kind": "partial",
+      "format": "YYYY",
+      "widths": {
+        "year": 4
+      },
+      "example": "2020"
+    },
+    "year-month": {
+      "kind": "partial",
+      "format": "YYYY-MM",
+      "widths": {
+        "year": 4,
+        "month": 2
+      },
+      "separator": "-",
+      "example": "2020-03"
+    },
+    "timestamp-z": {
+      "kind": "timestamp",
+      "format": "YYYY-MM-DDTHH:mm:ssZ",
+      "order": "YMD",
+      "date_pattern": "ymd-dash",
+      "timezone": "literal Z",
+      "example": "2020-03-15T14:30:00Z"
+    },
+    "ymd-interval": {
+      "kind": "interval",
+      "format": "YYYY-MM-DD/YYYY-MM-DD",
+      "endpoint_patterns": [
+        "ymd-dash",
+        "ymd-dash"
+      ],
+      "separator": "/",
+      "example": "2020-03-15/2020-03-20"
+    },
+    "split-numeric": {
+      "kind": "split",
+      "format": "named day/month/year components",
+      "widths": {
+        "day": [
+          1,
+          2
+        ],
+        "month": [
+          1,
+          2
+        ],
+        "year": [
+          4
+        ]
+      },
+      "example": "year=2020; day=7; month=03"
+    },
+    "timestamp-no-zone": {
+      "kind": "timestamp",
+      "format": "YYYY-MM-DDTHH:mm:ss",
+      "order": "YMD",
+      "date_pattern": "ymd-dash",
+      "timezone": "unspecified",
+      "example": "2009-06-29T00:00:00"
+    }
+  },
+  "excluded_initial_formats": [
+    "two-digit years",
+    "natural language",
+    "unlisted timestamp/timezone variants"
+  ],
+  "notes": "Extends 1.0 with an exact timestamp without a timezone suffix. The timezone remains unspecified; no UTC assumption, calendar validation or value conversion is performed. Historical versions remain unchanged."
+}

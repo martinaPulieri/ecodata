@@ -14,7 +14,8 @@ new_date_mapping(
   evidence,
   confirmed = FALSE,
   date_order = NULL,
-  date_order_evidence = ""
+  date_order_evidence = "",
+  declared_pattern = NULL
 )
 }
 \arguments{
@@ -39,6 +40,9 @@ be confirmed; construct a user mapping after explicit confirmation.}
 \item{date_order}{NULL, DMY, MDY or YMD for a single field.}
 
 \item{date_order_evidence}{Required explanation when an order is documented.}
+
+\item{declared_pattern}{Optional supported date-pattern ID. When supplied,
+recognition compares only this exact declared format; NULL retains legacy recognition.}
 }
 \value{
 Mapping with original headers, positions and provenance. It is not

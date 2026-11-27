@@ -1,5 +1,12 @@
 # Missing-information questions and approved answers
 
+The current date UI follows [date-workflow.md](date-workflow.md): **Next** checks
+information in the background, date fields/formats appear in bullets, and **Run
+validation** records declarations without semantic-role or evidence inputs. The
+date-role/review API workflow described below is retained for historical records
+and programmatic callers. Non-date technical questions retain review/approval,
+with automatic provenance in place of a required evidence text field.
+
 Open **Missing information** for an active input and its latest configuration.
 Choose **Check missing information**. The application reads complete tables
 within the Step 2B quotas, then shows questions for the selected file. Each
@@ -43,7 +50,7 @@ review again. A repeated approval does not create another revision.
 A prerequisite marked ready is only eligible for a later scientific check.
 Approval does not prove that an encoding guess is correct or a date is valid.
 A wrong supplied parser can remain unreadable. Independent checks continue;
-matching/date recognition and background validation operations remain future work.
+date recognition and background validation are available through the guided flow.
 
 ## Reproducible manual verification
 

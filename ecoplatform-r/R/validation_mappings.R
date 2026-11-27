@@ -47,11 +47,13 @@ column_contract <- function(table, position) {
 #'   be confirmed; construct a user mapping after explicit confirmation.
 #' @param date_order NULL, DMY, MDY or YMD for a single field.
 #' @param date_order_evidence Required explanation when an order is documented.
+#' @param declared_pattern Optional supported date-pattern ID. When supplied,
+#'   recognition compares only this exact declared format; NULL retains legacy recognition.
 #' @return Mapping with original headers, positions and provenance. It is not
 #'   evidence that the source exists or that a value is a valid calendar date.
 #' @export
 new_date_mapping <- function(table, mapping_id, date_role, columns, source,
-  actor_id, evidence, confirmed = FALSE, date_order = NULL, date_order_evidence = "") {
+  actor_id, evidence, confirmed = FALSE, date_order = NULL, date_order_evidence = "", declared_pattern = NULL) {
   validate_table_contract(table)
   scalar_text(mapping_id, "mapping_id"); scalar_text(date_role, "date_role")
   scalar_text(actor_id, "actor_id"); scalar_text(evidence, "mapping evidence")
@@ -68,15 +70,23 @@ new_date_mapping <- function(table, mapping_id, date_role, columns, source,
     date_order <- contract_enum(date_order, c("DMY", "MDY", "YMD"), "date_order")
     scalar_text(date_order_evidence, "date order evidence")
   } else if (nzchar(date_order_evidence)) stop("Date order evidence requires a date order")
-  contract_copy(list(mapping_id = mapping_id, table = table, date_role = date_role,
+  result <- list(mapping_id = mapping_id, table = table, date_role = date_role,
     columns = refs, source = source, actor_id = actor_id, evidence = evidence,
-    confirmed = confirmed, date_order = date_order, date_order_evidence = date_order_evidence))
+    confirmed = confirmed, date_order = date_order, date_order_evidence = date_order_evidence)
+  if (!is.null(declared_pattern)) {
+    patterns <- date_patterns("date-patterns-1.1")$patterns
+    contract_enum(declared_pattern, names(patterns), "declared date format")
+    if (identical(patterns[[declared_pattern]]$kind,"split") != (length(columns)==3L))
+      stop("Declared date format does not match the selected column structure")
+    result$declared_pattern <- declared_pattern
+  }
+  contract_copy(result)
 }
 
 validate_date_mapping <- function(mapping) {
   positions <- vapply(mapping$columns, function(x) x$position, numeric(1))
   rebuilt <- new_date_mapping(mapping$table, mapping$mapping_id, mapping$date_role, positions,
-    mapping$source, mapping$actor_id, mapping$evidence, mapping$confirmed, mapping$date_order, mapping$date_order_evidence)
+    mapping$source, mapping$actor_id, mapping$evidence, mapping$confirmed, mapping$date_order, mapping$date_order_evidence, mapping$declared_pattern)
   if (!contract_equal(mapping, rebuilt)) stop("Invalid date mapping or original table headers")
   invisible(mapping)
 }
@@ -145,6 +155,8 @@ new_validation_spec <- function(date_mappings = list(), linkage_mappings = list(
     }
   }
   rules <- validation_rules(); patterns <- date_patterns(pattern_version)
+  for(mapping in date_mappings)if(!is.null(mapping$declared_pattern)&&!mapping$declared_pattern%in%names(patterns$patterns))
+    stop("Declared date format is absent from the selected catalogue")
   if (is.null(enabled_rules)) enabled_rules <- names(rules$rules)
   if (is.null(enabled_patterns)) enabled_patterns <- names(patterns$patterns)
   contract_texts(enabled_rules, "enabled rules", TRUE); contract_texts(enabled_patterns, "enabled patterns", TRUE)

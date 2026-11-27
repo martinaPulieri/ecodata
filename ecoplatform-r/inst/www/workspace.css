@@ -1,4 +1,7 @@
 :root { --ink:#182f2b; --muted:#63736d; --line:#dfe7e1; --green:#185e50; }
+.workflow-bottom { display:flex; justify-content:flex-end; gap:12px; margin-top:24px; }
+.date-requirements { padding-left:22px; }
+.date-requirements>li { padding:12px 0; }
 body { background:#f4f6f2; color:var(--ink); font-size:14px; }
 .container-fluid { padding:0 36px; max-width:1600px; margin:auto; }
 .app-header { display:flex; justify-content:space-between; align-items:center; padding:24px 0; border-bottom:1px solid var(--line); }
@@ -61,5 +64,9 @@ h3 { font-size:16px; font-weight:650; margin:0 0 10px; }
 .table th { background:#f3f6f2; color:#4a695a; font-size:11px; border-bottom-color:#dce5dd; }
 .table td,.table th { padding:11px 12px; }
 .app-footer { margin:24px 0; padding:18px 0; border-top:1px solid var(--line); color:#77877d; font-size:11px; }
+.validation-counts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; margin:20px 0; }
+.validation-coverage { display:block; overflow-x:auto; max-width:100%; }
+.validation-coverage td { white-space:normal; min-width:100px; max-width:300px; overflow-wrap:anywhere; }
+@media(max-width:650px) { .validation-counts { grid-template-columns:1fr; gap:8px; } }
 @media(max-width:850px) { .container-fluid { padding:0 18px; } .workspace-grid { grid-template-columns:1fr; } .workspace-sidebar { display:grid; grid-template-columns:1fr 1fr; gap:14px; } .sidebar-note { grid-column:1/-1; } .workspace-sidebar .surface { margin:0; } .page-intro { align-items:flex-start; } .stage-badge { display:none; } }
 @media(max-width:540px) { .app-header { padding:18px 0; } .brand div>span,.local-badge { display:none; } h1 { font-size:27px; } .page-intro { padding:24px 0 18px; } .metrics { gap:7px; } .metric { padding:13px; } .metric-symbol { display:none; } .metric-value { font-size:23px; } .metric-label { font-size:10px; } .workspace-sidebar { grid-template-columns:1fr; } .parser-grid { grid-template-columns:1fr; } .surface { padding:18px; } .nav-tabs { gap:0; } .nav-tabs .nav-link { padding:10px; font-size:11px; } }

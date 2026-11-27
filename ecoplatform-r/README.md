@@ -1,6 +1,21 @@
 # Ecological platform: local Shiny workspace
 
-This R package implements local input registration, immutable configuration revisions and SQLite processing history, with a Shiny interface for uploading files, configuring lexical previews and inspecting history. R services also execute exact linkage checks and lexical date recognition; Shiny validation execution and saved results are planned for Task 2E. See the [approved workspace structure](../README.md), [storage contracts](docs/architecture/step1-storage.md) and [Shiny manual checks](docs/user-guide/shiny-workspace.md).
+This R package implements local input registration, immutable configuration revisions and SQLite processing history. Shiny supports uploading files, configuring lexical previews, running background linkage/date validation and inspecting saved results and history. See the [approved workspace structure](../README.md), [storage contracts](docs/architecture/step1-storage.md) and [validation guide](docs/user-guide/validation-results.md).
+
+The approved guided date flow now combines **Save and generate preview** under
+**Data and configuration**, with the preview directly beneath reading settings.
+**Next** opens **Missing information**, checks in the background and displays date
+column/format choices as bullets. Formats are inferred where possible and remain
+editable; ambiguity requires a choice. **Run validation** records the selections
+and checks dates against their exact declared formats. It requires no semantic date
+role or evidence text and preserves all original values. See the
+[date workflow guide](docs/user-guide/date-workflow.md) and
+[architecture](docs/architecture/date-workflow.md).
+
+Catalogue 1.1 also recognises timestamps without timezone suffixes, such as
+`2009-06-29T00:00:00`, separately from timestamps ending in `Z`. The guided flow
+infers and displays this format without assuming UTC. The Validation tab shows
+an indeterminate progress bar and current saved stages while work is pending.
 
 New CSV/TSV uploads automatically detect supported encoding and separator when evidence is unambiguous. Detected settings and evidence are saved in revision 1. Manual controls remain available; **Detect format** redetects an already registered file into a new revision. Ambiguous legacy encodings and competing separator candidates are explicitly flagged for review. See [automatic detection](docs/user-guide/parser-detection.md).
 
@@ -24,7 +39,7 @@ and [schema v2 contracts](docs/architecture/workspace-lifecycle.md). Stop older
 app processes before opening an existing runtime with this version: it upgrades
 schema v1 automatically after making a verified backup.
 
-From this directory, run `Rscript --vanilla tools/launch-shiny.R`, then open http://127.0.0.1:8791. ECODATA_PORT can select a different free local port; ECODATA_RUNTIME_ROOT selects persistent local, non-synchronised storage. Each browser session owns its SQLite connection. The exported `run_app()` and launcher consistently configure the upload transport limit; validation execution through Shiny remains Task 2E.
+From this directory, run `Rscript --vanilla tools/launch-shiny.R`, then open http://127.0.0.1:8791. ECODATA_PORT can select a different free local port; ECODATA_RUNTIME_ROOT selects persistent local, non-synchronised storage. Each browser session and background worker owns its SQLite connection. Stop older app processes before upgrading an existing runtime: this version migrates SQLite to v3 after a verified backup. Older versions cannot open v3.
 
 ## Setup
 
@@ -155,3 +170,28 @@ Run `Rscript --vanilla tools/manual-dates.R` for a synthetic demonstration.
 Results persistence and the Shiny validation/results interface remain Task 2E.
 The user approved committing and pushing the implementation, tests and updated
 documentation on 26 November 2026.
+
+## Task 2E: run validation and inspect saved results
+
+The **Validation** tab queues an exact source/configuration snapshot and starts
+a supervised background worker. Linkage and date-pattern families report progress
+independently. **Results** provides persisted summaries, coverage explanations,
+filtered/paginated row details, findings, check records and frozen provenance.
+Saved runs remain accessible after restart, later configurations and reversible
+source removal. **Cancel run** discards partial scientific output; stopped-worker
+recovery checks process identity before recording interruption.
+
+Source byte verification happens in the worker. Final scientific records and
+terminal progress commit atomically with one bulk append per normalised table.
+Generic operation APIs route validation into the managed request workflow;
+pre-v3 intent records can be explicitly cancelled without inventing a snapshot.
+The installed callr/ps worker dependencies are already pinned in renv.lock.
+
+See [architecture](docs/architecture/persistent-validation.md),
+[operator guide](docs/user-guide/validation-results.md),
+[traceability](docs/requirements/persistent-validation-traceability.md) and
+[verification](docs/verification/2026-11-26-shiny-validation.md).
+Run `Rscript --vanilla tools/manual-validation.R` for a synthetic demonstration.
+The user approved committing and pushing Task 2E, the guided date workflow and
+timestamp/progress fixes on 27 November 2026. Final verification: 1,235 assertions,
+zero failures/errors/warnings/skips; installed-package Status: OK.

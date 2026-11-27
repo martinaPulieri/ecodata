@@ -34,7 +34,7 @@ open_repository <- function(runtime_root = Sys.getenv("ECODATA_RUNTIME_ROOT", un
   DBI::dbExecute(con, "PRAGMA busy_timeout = 5000")
   # The migration rechecks version and table ownership under its write lock.
   version <- DBI::dbGetQuery(con, "PRAGMA user_version")[[1]]
-  if (version > 2L) stop("Database schema is newer than this application")
+  if (version > 3L) stop("Database schema is newer than this application")
   # SQLite's journal-mode negotiation may return BUSY immediately even with
   # busy_timeout when two processes first create/open the same database.
   deadline <- proc.time()[["elapsed"]] + 5

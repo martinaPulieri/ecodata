@@ -21,8 +21,8 @@ submit_operation(
 
 \item{config_id}{Exact configuration ID belonging to version_id.}
 
-\item{operation_type}{inspect or validation. Validation is reserved for the
-next step; this function does not claim a validator exists.}
+\item{operation_type}{inspect or validation. Validation routes to a frozen
+managed request; neither path performs full-table processing here.}
 
 \item{request_id}{Caller-generated idempotency key, unique in this repository.}
 
