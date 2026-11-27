@@ -2,7 +2,20 @@
 
 ## Using the application
 
-For a new CSV/TSV upload, press Register inputs as usual. The first configuration applies supported encoding/separator evidence automatically and displays a detection summary above the parser controls. No manual settings are required when both components are unambiguous.
+For a new CSV/TSV/delimited TXT upload, press Register inputs as usual. The first configuration applies supported encoding/separator evidence automatically and displays a detection summary above the parser controls. No manual settings are required when both components are unambiguous.
+
+Standalone `.txt` tables follow the same byte-based detector, preview and full
+reader as CSV/TSV. A suffix does not establish an encoding or separator; prose or
+ambiguous structure still requires review. For a TXT already registered by an
+older release, select the latest revision and click **Detect format**, then
+**Save and generate preview**. The new revision replaces the old unsupported
+detection evidence without renaming or modifying the source.
+
+File-format detection does not inspect date validity. For
+`Groundwater_Copepod_Trait_error.txt`, UTF-8/comma detection is unambiguous despite
+edited dates. A trailing space in `2025-02-19 ` is a mismatch against YYYY-MM-DD;
+`2025-19-02` matches that lexical shape but requires a future calendar-validity
+check to reject month 19. Current recognition does not certify valid dates.
 
 For a previously registered file, select its latest configuration in Data and configuration and press **Detect format**. This saves a new revision; the old UTF-8/default snapshot remains retrievable. Then press Generate preview. Historical configurations cannot be silently edited or redetected.
 

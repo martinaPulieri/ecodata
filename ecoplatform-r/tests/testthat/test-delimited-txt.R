@@ -1,0 +1,51 @@
+test_that("standalone delimited TXT uses byte detection and a recorded lexical preview", {
+  repo<-new_test_repo()
+  path<-write_fixture('id,eventDate,note\n001,2025-19-02,"a,b"\n002,2025-02-19 ,plain\n',".txt")
+  x<-detect_parser(path)
+  expect_equal(x$status,"detected")
+  expect_equal(x$parser$encoding,"UTF-8")
+  expect_equal(x$parser$delimiter,",")
+  v<-register_uploaded_inputs(repo,data.frame(name="trait.txt",size=file.info(path)$size,type="text/plain",datapath=path),"Trait test","tester")
+  cfg<-get_configuration(repo,v$config_id)
+  expect_equal(cfg$parser_detection[[v$resource_ids[1]]]$status,"detected")
+  preview<-run_workspace_inspection(repo,v$version_id,cfg$config_id,"tester")$inspection$resources[[1]]
+  expect_equal(preview$status,"ready")
+  expect_equal(preview$tables[[1]]$preview[["note"]],c("a,b","plain"))
+  expect_equal(preview$tables[[1]]$preview[["eventDate"]],c("2025-19-02","2025-02-19 "))
+  request<-prepare_date_information(repo,v$version_id,cfg$config_id)
+  table<-request$preparation$tables[[1]]
+  expect_equal(table$status,"complete")
+  saved<-save_date_declarations(repo,request,list(list(table_id=table$table_id,columns=c(value=1),pattern_id="ymd-dash")),"tester")
+  out<-run_date_validation(repo,v$version_id,saved$config_id)
+  expect_equal(vapply(out$mappings[[1]]$rows,`[[`,character(1),"status"),c("recognised","unrecognised"))
+  expect_true(verify_input(repo,v$version_id)$ok)
+})
+
+test_that("TXT tab-separated UTF-16 data is detected and can be redetected after an override", {
+  repo<-new_test_repo();path<-tempfile(fileext=".txt")
+  bytes<-iconv("id\teventDate\n001\t2025-02-19\n",to="UTF-16LE",toRaw=TRUE)[[1]]
+  writeBin(c(as.raw(c(255,254)),bytes),path)
+  v<-register_uploaded_inputs(repo,data.frame(name="trait.txt",size=file.info(path)$size,type="text/plain",datapath=path),"UTF16 trait","tester")
+  cfg<-get_configuration(repo,v$config_id)
+  expect_equal(cfg$parsers[[v$resource_ids[1]]]$encoding,"UTF-16LE")
+  expect_equal(cfg$parsers[[v$resource_ids[1]]]$delimiter,"\t")
+  detected<-redetect_configuration(repo,cfg$config_id,v$resource_ids[1],"tester")
+  expect_equal(detected$revision,2L)
+  expect_equal(detected$parser_detection[[v$resource_ids[1]]]$status,"detected")
+  expect_equal(read_validation_tables(repo,v$version_id,detected$config_id)$tables[[1]]$data[["eventDate"]],"2025-02-19")
+})
+
+test_that("TXT in Shiny offers explicit detection while arbitrary prose stays unresolved", {
+  repo<-new_test_repo();path<-write_fixture("id,eventDate\n001,2025-02-19\n",".txt")
+  v<-register_uploaded_inputs(repo,data.frame(name="trait.txt",size=file.info(path)$size,type="text/plain",datapath=path),"Trait UI","tester")
+  shiny::testServer(workspace_server,args=list(repo=repo),{
+    session$setInputs(actor="tester",version=v$version_id,resource=v$resource_ids[1],config=v$config_id)
+    expect_match(output$parser_form$html,"Detect format",fixed=TRUE)
+    session$setInputs(form_context=current_context()$token,detect=1)
+    latest<-utils::tail(list_configurations(repo,v$version_id)$config_id,1)
+    expect_equal(get_configuration(repo,latest)$revision,2L)
+    expect_equal(get_configuration(repo,latest)$parser_detection[[v$resource_ids[1]]]$status,"detected")
+  })
+  expect_false(detect_parser(write_fixture("ordinary prose\nno columns\n",".txt"))$status=="detected")
+  expect_equal(detect_parser(write_fixture("not a table",".pdf"))$status,"unsupported")
+})

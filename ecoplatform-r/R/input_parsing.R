@@ -25,7 +25,7 @@ inspect_input <- function(version_id, config_id, repo, preview_rows = 20L, max_p
     resource <- verified$resources[i, ]
     result <- tryCatch({
       extension <- tolower(tools::file_ext(resource$original_name))
-      if (extension %in% c("csv", "tsv")) {
+      if (is_standalone_table(resource$original_name)) {
         if (resource$size_bytes > max_preview_bytes) stop("Table exceeds bounded preview byte limit; original retained")
         raw <- readBin(resource$owned_path, "raw", n = max_preview_bytes + 1L)
         table <- parse_preview(raw, config$parsers[[resource$resource_id]], preview_rows, resource$resource_id, "table")

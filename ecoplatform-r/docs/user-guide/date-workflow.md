@@ -1,6 +1,6 @@
 # Configure reading, preview and declare date formats
 
-1. Register a CSV, TSV or ZIP. Registration opens **Data and configuration** with
+1. Register a CSV, TSV, delimited TXT or ZIP. Registration opens **Data and configuration** with
    the detected reading settings. Review encoding, delimiter, decimal mark and
    quoting. ZIP descriptors remain authoritative; plain ZIP table settings can be
    clarified separately.
@@ -67,3 +67,9 @@ certify calendar validity or modify, trim or replace any original value.
 Older mappings without a declared format keep their original multi-pattern
 recognition behaviour. Existing saved assessments retain their exact definitions.
 Declaring a format requires a new run; historical results are not rewritten.
+
+Delimited TXT files registered by an older release may still show the former
+unsupported-detection notice. Use **Detect format** to append fresh evidence,
+then save/preview and continue. Deliberately malformed date values do not by
+themselves make encoding or delimiter ambiguous. A malformed value can prevent
+a whole-column format suggestion; explicitly choose the expected format to test it.

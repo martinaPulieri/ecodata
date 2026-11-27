@@ -68,7 +68,7 @@ read_validation_tables <- function(repo,version_id,config_id,max_table_bytes=50*
     result<-tryCatch({
       if(!resource$ok)stop("Input resource integrity verification failed")
       ext<-tolower(tools::file_ext(resource$original_name))
-      if(ext%in%c("csv","tsv")) {
+      if(is_standalone_table(resource$original_name)) {
         if(cancel())read_stop("cancelled","Reading cancelled before resource")
         if(resource$size_bytes>limits$max_table_bytes)read_stop("limited","Table exceeds full-read byte quota")
         bytes<-readBin(resource$owned_path,"raw",n=limits$max_table_bytes+1)

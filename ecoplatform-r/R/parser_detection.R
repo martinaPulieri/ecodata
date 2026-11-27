@@ -32,9 +32,9 @@ detect_parser <- function(path, original_name = basename(path), max_sample_bytes
     result$message <- "Archive table settings come from its immutable descriptor."
     return(result)
   }
-  if (!extension %in% c("csv", "tsv")) {
+  if (!is_standalone_table(original_name)) {
     result$status <- "unsupported"
-    result$message <- "Automatic detection is available for CSV/TSV files."
+    result$message <- "Automatic detection is available for CSV/TSV/delimited TXT files."
     return(result)
   }
   info <- file.info(path)

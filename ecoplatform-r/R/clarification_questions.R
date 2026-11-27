@@ -60,7 +60,7 @@ build_clarification_questions <- function(input,p) {
     if(any(vapply(tables,function(t)identical(t$archive_mode,"plain_zip"),logical(1)))) {
       questions<-c(questions,plain_archive_questions(input,p,resource,tables));next
     }
-    tabular <- tolower(tools::file_ext(resource$original_name)) %in% c("csv","tsv")
+    tabular <- is_standalone_table(resource$original_name)
     unreadable <- any(vapply(tables,function(t)t$status!="complete",logical(1)))
     if(tabular && (unreadable || clarification_parser_pending(input$configuration,resource$resource_id))) {
       reason <- if(unreadable)paste("Confirm parser settings or supply a corrected source:",tables[[1]]$reason) else

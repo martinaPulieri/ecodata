@@ -209,7 +209,7 @@ workspace_server <- function(id, repo) {
       p <- ctx$config$parsers[[ctx$resource_id]]
       historical <- ctx$config$config_id != utils::tail(list_configurations(repo, ctx$version_id)$config_id, 1)
       archive <- tolower(tools::file_ext(ctx$resource$original_name)) == "zip"
-      tabular <- tolower(tools::file_ext(ctx$resource$original_name)) %in% c("csv", "tsv")
+      tabular <- is_standalone_table(ctx$resource$original_name)
       detection <- ctx$config$parser_detection[[ctx$resource_id]]
       fields <- if (archive) shiny::div(class = "alert alert-info", "ZIP archives with meta.xml use their descriptor. For other ZIP archives, review and approve each table's settings under Missing information.") else shiny::div(class = "parser-grid",
         shiny::selectInput(ns("delimiter"), "Delimiter", choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab" = "\t", "Pipe (|)" = "|"), selected = p$delimiter),

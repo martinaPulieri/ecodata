@@ -23,7 +23,7 @@ workspace_ui <- function(id = "workspace") {
         shiny::div(class = "surface upload-card", shiny::h3("Add data"),
           shiny::p(class = "muted", "Original files are preserved unchanged."),
           shiny::fileInput(ns("upload"), "Local files", multiple = TRUE,
-            buttonLabel = "Choose files", placeholder = "CSV, TSV or ZIP"),
+            buttonLabel = "Choose files", placeholder = "CSV, TSV, TXT or ZIP"),
           shiny::textInput(ns("title"), "Collection name", value = "New data"),
           shiny::textInput(ns("actor"), "Operator", value = "local-reviewer"),
           shiny::actionButton(ns("register"), "Register inputs", icon = shiny::icon("plus"), class = "btn-primary full-width"),
