@@ -119,7 +119,7 @@ workspace_date_information <- function(input,output,session,repo,current_context
             selected=if(length(split_saved))as.character(split_saved[[1]]$columns[[role]]$position) else "")),
           shiny::p("Declared format: separate numeric day/month/year components.")))
         fields<-input[[paste0("info_fields_",index)]]
-        patterns<-date_patterns("date-patterns-1.1")$patterns
+        patterns<-date_patterns("date-patterns-1.2")$patterns
         ids<-names(Filter(function(p)p$kind!="split",patterns))
         shiny::tagList(lapply(fields[nzchar(fields)],function(position){
           j<-suppressWarnings(as.integer(position))
@@ -136,6 +136,8 @@ workspace_date_information <- function(input,output,session,repo,current_context
               paste("Detected format:",patterns[[hint$selected]]$format,".",hint$reason)),
             if(!is.null(hint$selected)&&identical(patterns[[hint$selected]]$timezone,"unspecified"))
               shiny::p(class="field-help","Timezone is not specified in the source. UTC is not assumed."),
+            if(any(vapply(patterns[unlist(hint$candidates)],function(p)isTRUE(p$widths$year==2),logical(1))))
+              shiny::p(class="field-help","Two-digit years are preserved as written. A century is not inferred."),
             shiny::p(class="field-help",paste("Examples:",paste(unlist(hint$examples),collapse=" | "))))
         }))
       })

@@ -17,6 +17,10 @@ Catalogue 1.1 also recognises timestamps without timezone suffixes, such as
 infers and displays this format without assuming UTC. The Validation tab shows
 an indeterminate progress bar and current saved stages while work is pending.
 
+Catalogue 1.2 adds exact **DD/MM/YY** and **MM/DD/YY** declarations. Two-digit years
+remain text without a century pivot. Earlier catalogue snapshots are retained;
+select the correct year width and create a new run to assess existing data.
+
 New CSV/TSV uploads automatically detect supported encoding and separator when evidence is unambiguous. Detected settings and evidence are saved in revision 1. Manual controls remain available; **Detect format** redetects an already registered file into a new revision. Ambiguous legacy encodings and competing separator candidates are explicitly flagged for review. See [automatic detection](docs/user-guide/parser-detection.md).
 
 The completed Task 2A supplies versioned validation definitions,

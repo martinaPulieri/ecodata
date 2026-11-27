@@ -74,7 +74,7 @@ new_date_mapping <- function(table, mapping_id, date_role, columns, source,
     columns = refs, source = source, actor_id = actor_id, evidence = evidence,
     confirmed = confirmed, date_order = date_order, date_order_evidence = date_order_evidence)
   if (!is.null(declared_pattern)) {
-    patterns <- date_patterns("date-patterns-1.1")$patterns
+    patterns <- date_patterns("date-patterns-1.2")$patterns
     contract_enum(declared_pattern, names(patterns), "declared date format")
     if (identical(patterns[[declared_pattern]]$kind,"split") != (length(columns)==3L))
       stop("Declared date format does not match the selected column structure")

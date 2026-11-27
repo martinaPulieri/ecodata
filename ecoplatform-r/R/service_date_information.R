@@ -1,7 +1,9 @@
 # Date-format suggestions are technical, not semantic date roles or calendar checks.
 infer_date_format <- function(values) {
-  values <- values[!vapply(values,blank_contract_value,logical(1))]
-  patterns <- date_patterns("date-patterns-1.1")$patterns
+  # Repetition cannot change an all-values format match. Wide abundance tables
+  # contain many repeated zeros/counts; inspect each distinct text once.
+  values <- unique(values[!vapply(values,blank_contract_value,logical(1))])
+  patterns <- date_patterns("date-patterns-1.2")$patterns
   ids <- names(Filter(function(p)p$kind!="split",patterns))
   candidates <- Filter(function(id)length(values)>0L && all(vapply(values,function(v)
     date_pattern_match(list(value=v),patterns[[id]]),logical(1))),ids)
@@ -53,11 +55,11 @@ save_date_declarations <- function(repo,request,declarations,actor_id,replace_ta
   ids<-vapply(mappings,`[[`,character(1),"mapping_id")
   if(anyDuplicated(ids))stop("A date field cannot be declared twice")
   spec<-cfg$validation_spec
-  if(is.null(spec))spec<-new_validation_spec(pattern_version="date-patterns-1.1")
+  if(is.null(spec))spec<-new_validation_spec(pattern_version="date-patterns-1.2")
   # Save exact executable definitions even when an older configuration used 0.1.
   spec<-new_validation_spec(spec$date_mappings,spec$linkage_mappings,
     unlist(spec$enabled_rules),enabled_patterns=unique(c(as.character(unlist(spec$enabled_patterns)),
-      vapply(declarations,`[[`,character(1),"pattern_id"))),pattern_version="date-patterns-1.1")
+      vapply(declarations,`[[`,character(1),"pattern_id"))),pattern_version="date-patterns-1.2")
   if(is.null(replace_table_ids))replace_table_ids<-unique(vapply(mappings,function(m)m$table$table_id,character(1)))
   known<-vapply(preparation$tables,`[[`,character(1),"table_id")
   if(any(!replace_table_ids%in%known))stop("Unknown date table selection")

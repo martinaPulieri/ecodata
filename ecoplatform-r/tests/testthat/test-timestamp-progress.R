@@ -18,7 +18,7 @@ test_that("a declared timestamp without timezone validates exactly and preserves
   expect_equal(vapply(rows,`[[`,character(1),"status"),c("recognised",rep("unrecognised",4)))
   expect_equal(rows[[1]]$original_values$value,"2009-06-29T00:00:00")
   expect_equal(rows[[1]]$candidates[[1]]$pattern$timezone,"unspecified")
-  expect_equal(cfg$validation_spec$patterns$version,"date-patterns-1.1")
+  expect_equal(cfg$validation_spec$patterns$version,"date-patterns-1.2")
   expect_true(verify_input(repo,f$v$version_id)$ok)
   expect_false("timestamp-no-zone"%in%names(date_patterns("date-patterns-1.0")$patterns))
   expect_false("timestamp-no-zone"%in%names(date_patterns("date-patterns-0.1")$patterns))
